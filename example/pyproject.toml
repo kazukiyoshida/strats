@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "strats",
     "strats-oanda",
 ]
 
 [tool.uv.sources]
 strats-oanda = { path = "../../strats-oanda", editable = true }
+strats = { workspace = true }
