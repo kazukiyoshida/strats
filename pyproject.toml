@@ -55,6 +55,8 @@ commands =
     ruff format
 
 [testenv:mypy]
-deps = mypy
+deps =
+    mypy
+    types-waitress
 commands = mypy src tests
 """
