@@ -1,5 +1,6 @@
 import logging
 
+import strats_oanda
 from strats_oanda.client import PricingStreamClient
 
 from strats import Strats
@@ -8,6 +9,8 @@ from strats.model import PricesData, PricesMetrics, prices_mapper
 from strats.monitor import StreamMonitor
 
 logging.basicConfig(level=logging.INFO)
+
+strats_oanda.basic_config(use_file=True, file_path=".strats_oanda.yaml")
 
 
 @singletondataclass
@@ -31,14 +34,12 @@ state = State(
 prices_monitor = StreamMonitor(
     state=state,
     client=PricingStreamClient(instruments=["USD_JPY"]),
-    handler=None,
+    handler=lambda state, msg: print(msg),
 )
 
-app = Strats(
+Strats(
     state=state,
     monitors={
         "prices_monitor": prices_monitor,
     },
-)
-
-app.serve()
+).serve()

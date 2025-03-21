@@ -29,10 +29,27 @@ def metrics():
 @router.route("/monitors", methods=["GET"])
 def get_monitors():
     kernel = get_kernel()
-    res = {
+    return jsonify(response_monitors_info(kernel))
+
+
+@router.route("/monitors/start", methods=["POST"])
+def start_monitors():
+    kernel = get_kernel()
+    kernel.start_monitors()
+    return jsonify(response_monitors_info(kernel))
+
+
+@router.route("/monitors/stop", methods=["POST"])
+def stop_monitors():
+    kernel = get_kernel()
+    kernel.stop_monitors()
+    return jsonify(response_monitors_info(kernel))
+
+
+def response_monitors_info(kernel):
+    return {
         name: {
             "is_alive": monitor_thread.is_alive(),
         }
         for name, monitor_thread in kernel.monitor_threads.items()
     }
-    return jsonify(res)
