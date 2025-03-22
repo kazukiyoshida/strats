@@ -1,14 +1,11 @@
 import logging
 
 import uvicorn
-import uvloop
 from fastapi import FastAPI
 
 from strats.core.kernel import Kernel
 
 from .router import get_kernel, router
-
-uvloop.install()
 
 BANNER = r"""
  _______ _______  ______ _______ _______ _______

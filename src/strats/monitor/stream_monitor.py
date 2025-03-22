@@ -1,6 +1,5 @@
+import asyncio
 import logging
-from queue import Queue
-from threading import Event
 
 from strats.exchange import StreamClient
 
@@ -15,15 +14,48 @@ class StreamMonitor(Monitor):
         self.client = client
         self.handler = handler
 
-    def run(self, name: str, stop_event: Event):
-        logger.info(f"start {name}")
+    async def run(self, stop_event: asyncio.Event):
+        """
+        Monitor を開始する.
+        戻り値はなく、あくまで client からの msg を handler で処理するだけ.
+        stop_event 通知により Monitor は停止する. この stop_event は client と共有される.
+        """
+        current = asyncio.current_task()
+        if current is None:
+            raise Exception("current_task not found")
 
-        queue: Queue = Queue()
-        self.client.start(queue)
+        name = current.get_name()
 
-        while not stop_event.is_set():
-            msg = queue.get()
-            self.handler(self.state, msg)
+        client = self.client.stream(stop_event)
 
-        logger.info(f"stop {name}")
-        self.client.stop()
+        try:
+            while not stop_event.is_set():
+                # 一時的な task を開始
+                data_task = asyncio.create_task(client.__anext__())
+                stop_task = asyncio.create_task(stop_event.wait(), name="tmp-stop-event")
+
+                done, pending = await asyncio.wait(
+                    [data_task, stop_task],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+
+                # 不必要になった一時的な task は終了
+                for task in pending:
+                    task.cancel()
+
+                if stop_task in done:
+                    logger.info(f"monitor={name}: stop_event received")
+                    break
+
+                if data_task in done:
+                    try:
+                        item = data_task.result()
+                        self.handler(self.state, item)
+                    except StopAsyncIteration:
+                        # client が終了した場合
+                        logger.info(f"{name}: generator exhausted")
+                        break
+
+        finally:
+            await client.aclose()
+            logger.info(f"{name}: gracefully stopped.")
