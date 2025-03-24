@@ -10,11 +10,11 @@ class DataWithMetrics(Generic[D, M]):
         self,
         data: D,
         metrics: Optional[M] = None,
-        mapper: Optional[MapperFunction] = None,
+        data_mapper: Optional[MapperFunction] = None,
     ):
         self._data = data
         self._metrics = metrics
-        self._mapper = mapper
+        self._data_mapper = data_mapper
 
     @property
     def data(self) -> D:
@@ -23,8 +23,14 @@ class DataWithMetrics(Generic[D, M]):
     @data.setter
     def data(self, value: D):
         self._data = value
-        if self._mapper is not None:
-            self._mapper(self._data, self._metrics)
+
+        if self._metrics is None:
+            return
+
+        if self._data_mapper is not None:
+            self._data_mapper(self._data, self._metrics)
+        elif hasattr(self._metrics, "default_data_mapper"):
+            self._metrics.default_data_mapper(self._data)
 
     @property
     def metrics(self) -> Optional[M]:

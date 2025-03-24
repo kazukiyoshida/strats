@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Optional
 
 from prometheus_client import Gauge
@@ -6,8 +7,8 @@ from prometheus_client import Gauge
 
 @dataclass
 class PricesData:
-    bid: float
-    ask: float
+    bid: Decimal
+    ask: Decimal
 
 
 class PricesMetrics:
@@ -17,8 +18,7 @@ class PricesMetrics:
         self.ask = Gauge(f"{s}prices_ask", "")
         self.spread = Gauge(f"{s}prices_spread", "")
 
-
-def prices_mapper(d: PricesData, m: PricesMetrics):
-    m.bid.set(d.bid)
-    m.ask.set(d.ask)
-    m.spread.set(d.ask - d.bid)
+    def default_data_mapper(self, d: PricesData):
+        self.bid.set(float(d.bid))
+        self.ask.set(float(d.ask))
+        self.spread.set(float(d.ask - d.bid))
