@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 import sys
 from dataclasses import dataclass
@@ -31,6 +32,16 @@ class State:
         data = client_price_to_prices(msg)
         if data is not None:
             self.prices.data = data
+
+
+class Strategy:
+    def __init__(self):
+        pass
+
+    async def run(self, stop_event: asyncio.Event):
+        while not stop_event.is_set():
+            await asyncio.sleep(2)
+            print("strategy..")
 
 
 def main(argv=sys.argv[1:]):
@@ -68,8 +79,11 @@ def main(argv=sys.argv[1:]):
         handler=lambda state, msg: print(msg),
     )
 
+    strategy = Strategy()
+
     Strats(
         state=state,
+        strategy=strategy,
         monitors={
             "prices_monitor": prices_monitor,
             "transaction_monitor": transaction_monitor,
