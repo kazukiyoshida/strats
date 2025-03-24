@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional
 
-from prometheus_client import Gauge
+from prometheus_client import Counter, Gauge
 
 
 @dataclass
@@ -17,8 +17,10 @@ class PricesMetrics:
         self.bid = Gauge(f"{s}prices_bid", "")
         self.ask = Gauge(f"{s}prices_ask", "")
         self.spread = Gauge(f"{s}prices_spread", "")
+        self.update_count = Counter(f"{s}prices_update_count", "")
 
     def default_data_mapper(self, d: PricesData):
         self.bid.set(float(d.bid))
         self.ask.set(float(d.ask))
         self.spread.set(float(d.ask - d.bid))
+        self.update_count.inc()
