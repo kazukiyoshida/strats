@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import Callable, Generic, TypeVar
 
 from strats.exchange import StreamClient
 
@@ -8,8 +9,18 @@ from .monitor import Monitor
 logger = logging.getLogger(__name__)
 
 
-class StreamMonitor(Monitor):
-    def __init__(self, state, client: StreamClient, handler):
+S = TypeVar("S")
+D = TypeVar("D")
+HandlerFunction = Callable[[S, D], None]
+
+
+class StreamMonitor(Monitor, Generic[S, D]):
+    def __init__(
+        self,
+        state: S,
+        client: StreamClient,
+        handler: HandlerFunction,
+    ):
         self.state = state
         self.client = client
         self.handler = handler
