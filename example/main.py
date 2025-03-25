@@ -9,7 +9,7 @@ from strats_oanda.client import PricingStreamClient, TransactionClient
 from strats_oanda.converter import client_price_to_prices
 from strats_oanda.model import ClientPrice
 
-from strats import DataWithMetrics, Strats
+from strats import DataWithMetrics, Strategy, Strats
 from strats.model import PricesData, PricesMetrics
 from strats.monitor import StreamMonitor
 
@@ -34,14 +34,15 @@ class State:
             self.prices.data = data
 
 
-class Strategy:
-    def __init__(self):
-        pass
-
-    async def run(self, stop_event: asyncio.Event):
+class Strategy(Strategy):
+    async def run(
+        self,
+        state: State,
+        stop_event: asyncio.Event,
+    ):
         while not stop_event.is_set():
             await asyncio.sleep(2)
-            print("strategy..")
+            print("strategy..", state.prices.data)
 
 
 def main(argv=sys.argv[1:]):

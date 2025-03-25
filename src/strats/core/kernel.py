@@ -23,7 +23,10 @@ class Kernel:
 
         self.strategy_stop_event = asyncio.Event()
         self.strategy_task = asyncio.create_task(
-            self.strategy.run(self.strategy_stop_event),
+            self.strategy.run(
+                self.state,
+                self.strategy_stop_event,
+            ),
             name="strategy",
         )
 
