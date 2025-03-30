@@ -3,6 +3,7 @@ import asyncio
 import logging
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 
 import strats_oanda
 from strats_oanda.client import PricingStreamClient, TransactionClient
@@ -10,7 +11,8 @@ from strats_oanda.converter import client_price_to_prices
 from strats_oanda.model import ClientPrice
 
 from strats import DataWithMetrics, Strategy, Strats
-from strats.model import PricesData, PricesMetrics
+from strats.exchange.backtest import ClockStreamClient
+from strats.model import Clock, PricesData, PricesMetrics
 from strats.monitor import StreamMonitor
 
 logging.basicConfig(level=logging.INFO)
@@ -27,11 +29,15 @@ def parse_args(argv):
 @dataclass
 class State:
     prices: DataWithMetrics[PricesData, PricesMetrics]
+    clock: DataWithMetrics[Clock, None]
 
     def update_prices(self, msg: ClientPrice):
         data = client_price_to_prices(msg)
         if data is not None:
             self.prices.data = data
+
+    def update_clock(self, t: datetime):
+        self.clock.data = t
 
 
 class Strategy(Strategy):
@@ -60,12 +66,10 @@ def main(argv=sys.argv[1:]):
 
     state = State(
         prices=DataWithMetrics(
-            data=PricesData(
-                bid=0,
-                ask=0,
-            ),
+            data=PricesData(),
             metrics=PricesMetrics(prefix="usdjpy"),
         ),
+        clock=Clock(),
     )
 
     prices_monitor = StreamMonitor[State, ClientPrice](
@@ -80,6 +84,12 @@ def main(argv=sys.argv[1:]):
         handler=lambda state, msg: print(msg),
     )
 
+    clock_monitor = StreamMonitor[State, datetime](
+        state=state,
+        client=ClockStreamClient(socket_path="/tmp/shaft_unix_domain_socket"),
+        handler=lambda state, msg: print(msg),
+    )
+
     strategy = Strategy()
 
     Strats(
@@ -88,6 +98,7 @@ def main(argv=sys.argv[1:]):
         monitors={
             "prices_monitor": prices_monitor,
             "transaction_monitor": transaction_monitor,
+            "clock_monitor": clock_monitor,
         },
     ).serve()
 
