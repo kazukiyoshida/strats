@@ -2,17 +2,18 @@ import argparse
 import asyncio
 import logging
 import sys
-from dataclasses import dataclass
-from datetime import datetime
 
 import strats_oanda
-from strats_oanda.client import PricingStreamClient, TransactionClient
-from strats_oanda.converter import client_price_to_prices
+from strats_oanda.client import PricingStreamClient
+from strats_oanda.converter import client_price_to_prices_data
 from strats_oanda.model import ClientPrice
 
-from strats import DataWithMetrics, Strategy, Strats
-from strats.exchange.backtest import ClockStreamClient
-from strats.model import Clock, PricesData, PricesMetrics
+from strats import Data, State, Strategy, Strats
+from strats.model import (
+    PricesData,
+    PricesMetrics,
+    prices_data_to_prices_metrics,
+)
 from strats.monitor import StreamMonitor
 
 logging.basicConfig(level=logging.INFO)
@@ -26,37 +27,31 @@ def parse_args(argv):
     return opts
 
 
-@dataclass
-class State:
-    prices: DataWithMetrics[PricesData, PricesMetrics]
-    clock: DataWithMetrics[Clock, None]
-
-    def update_prices(self, msg: ClientPrice):
-        data = client_price_to_prices(msg)
-        if data is not None:
-            self.prices.data = data
-
-    def update_clock(self, t: datetime):
-        self.clock.data = t
+class ExampleState(State):
+    prices: Data(
+        source_class=ClientPrice,
+        data_class=PricesData,
+        metrics_class=PricesMetrics,
+        source_to_data=client_price_to_prices_data,
+        data_to_metrics=prices_data_to_prices_metrics,
+    )
 
 
-class Strategy(Strategy):
+class ExampleStrategy(Strategy):
     async def run(
         self,
-        state: State,
+        state: ExampleState,
         stop_event: asyncio.Event,
     ):
         while not stop_event.is_set():
             await asyncio.sleep(2)
-            print("strategy..", state.prices.data)
+            print("strategy..", state.prices)
 
 
-def main(argv=sys.argv[1:]):
-    opts = parse_args(argv)
-
-    if opts.env == "prod":
+def configure_oanda(env: str):
+    if env == "prod":
         file_path = ".strats_oanda_prod.yaml"
-    elif opts.env == "practice":
+    elif env == "practice":
         file_path = ".strats_oanda_practice.yaml"
     else:
         file_path = ".strats_oanda.yaml"
@@ -64,42 +59,27 @@ def main(argv=sys.argv[1:]):
     logger.info(f"use {file_path}")
     strats_oanda.basic_config(use_file=True, file_path=file_path)
 
-    state = State(
-        prices=DataWithMetrics(
-            data=PricesData(),
-            metrics=PricesMetrics(prefix="usdjpy"),
-        ),
-        clock=Clock(),
-    )
 
-    prices_monitor = StreamMonitor[State, ClientPrice](
-        state=state,
+def main(argv=sys.argv[1:]):
+    opts = parse_args(argv)
+
+    configure_oanda(opts.env)
+
+    state = ExampleState()
+
+    prices_monitor = StreamMonitor[ExampleState, ClientPrice](
+        state_data=state.prices,
         client=PricingStreamClient(instruments=["USD_JPY"]),
-        handler=lambda state, msg: state.update_prices(msg),
     )
 
-    transaction_monitor = StreamMonitor[State, ClientPrice](
-        state=state,
-        client=TransactionClient(),
-        handler=lambda state, msg: print(msg),
-    )
-
-    clock_monitor = StreamMonitor[State, datetime](
-        state=state,
-        client=ClockStreamClient(socket_path="/tmp/shaft_unix_domain_socket"),
-        handler=lambda state, msg: print(msg),
-    )
-
-    strategy = Strategy()
+    strategy = ExampleStrategy()
 
     Strats(
         state=state,
         strategy=strategy,
-        monitors={
-            "prices_monitor": prices_monitor,
-            "transaction_monitor": transaction_monitor,
-            "clock_monitor": clock_monitor,
-        },
+        monitors=[
+            prices_monitor,
+        ],
     ).serve()
 
 
