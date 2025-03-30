@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Optional
 
@@ -7,8 +7,8 @@ from prometheus_client import Counter, Gauge
 
 @dataclass
 class PricesData:
-    bid: Decimal
-    ask: Decimal
+    bid: Optional[Decimal] = field(default=None)
+    ask: Optional[Decimal] = field(default=None)
 
 
 class PricesMetrics:
@@ -20,7 +20,8 @@ class PricesMetrics:
         self.update_count = Counter(f"{s}prices_update_count", "")
 
     def default_data_mapper(self, d: PricesData):
-        self.bid.set(float(d.bid))
-        self.ask.set(float(d.ask))
-        self.spread.set(float(d.ask - d.bid))
-        self.update_count.inc()
+        if d.bid is not None and d.ask is not None:
+            self.bid.set(float(d.bid))
+            self.ask.set(float(d.ask))
+            self.spread.set(float(d.ask - d.bid))
+            self.update_count.inc()
