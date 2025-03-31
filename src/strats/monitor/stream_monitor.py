@@ -16,17 +16,27 @@ class StreamMonitor(Monitor):
 
     def __init__(
         self,
-        data_name: str,
         client: StreamClient,
+        data_name: Optional[str] = None,
         name: Optional[str] = None,
+        init_callback=None,
+        del_callback=None,
+        pre_event_callback=None,
+        post_event_callback=None,
     ):
-        self.data_name = data_name
         self.client = client
+        self.data_name = data_name
 
         if name is None:
             name = f"StreamMonitor{StreamMonitor._counter}"
             StreamMonitor._counter += 1
         self._name = name
+
+        # Callbacks
+        self.init_callback = init_callback
+        self.del_callback = del_callback
+        self.pre_event_callback = pre_event_callback
+        self.post_event_callback = post_event_callback
 
     @property
     def name(self) -> str:
@@ -38,13 +48,22 @@ class StreamMonitor(Monitor):
         戻り値はなく、あくまで client からの msg を state_data に流し込むだけ.
         stop_event 通知により Monitor は停止する. この stop_event は client と共有される.
         """
-        data_descriptor = type(state).__dict__[self.data_name]
+        if self.data_name:
+            if self.data_name in type(state).__dict__:
+                data_descriptor = type(state).__dict__[self.data_name]
+            else:
+                raise ValueError(f"data_name: `{self.data_name}` is not found in State")
+        else:
+            data_descriptor = None
 
         current = asyncio.current_task()
         if current is None:
             raise Exception("current_task not found")
 
         name = current.get_name()
+
+        if self.init_callback is not None:
+            self.init_callback()
 
         client = self.client.stream(stop_event)
 
@@ -67,6 +86,9 @@ class StreamMonitor(Monitor):
                 break
 
             if data_task in done:
+                if self.pre_event_callback is not None:
+                    self.pre_event_callback()
+
                 # the body of an async generator function does not execute
                 # until the first `__anext__()` call. Therefore, exceptions
                 # raised before the first `yield` are not visible until iteration begins.
@@ -79,10 +101,17 @@ class StreamMonitor(Monitor):
                     logger.error(f"{name}: streaming client got error: {e}")
                     break
 
-                try:
-                    data_descriptor.__set__(state, data)
-                except Exception as e:
-                    logger.error(f"{name}: failed to update state.{self.data_name}: {e}")
+                if data_descriptor is not None:
+                    try:
+                        data_descriptor.__set__(state, data)
+                    except Exception as e:
+                        logger.error(f"{name}: failed to update state.{self.data_name}: {e}")
+
+                if self.post_event_callback is not None:
+                    self.post_event_callback(data)
+
+        if self.del_callback is not None:
+            self.del_callback()
 
         await client.aclose()
         logger.info(f"{name}: stopped")
