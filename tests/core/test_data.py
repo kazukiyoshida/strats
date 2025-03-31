@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from unittest.mock import Mock, call
+from unittest.mock import ANY, Mock, call
 
 from strats.core import Data, State
 
@@ -14,17 +14,17 @@ class DummyData:
     d: str = "0"
 
 
-@dataclass
 class DummyMetrics:
-    m: float = 0.0
+    def __init__(self, _name=None, m=0.0):
+        self.m: float = m
 
 
 def test_data_update():
     def dummy_source_to_data(source: DummySource) -> DummyData:
         return DummyData(d=str(source.s))
 
-    def dummy_data_to_metrics(data: DummyData) -> DummyMetrics:
-        return DummyMetrics(m=float(data.d))
+    def dummy_data_to_metrics(data: DummyData, metrics: DummyMetrics):
+        metrics.m = float(data.d)
 
     class DummyState(State):
         num = Data(
@@ -67,7 +67,7 @@ def test_data_lifecycle_hook():
     source_to_data.side_effect = lambda s: DummyData(d=str(s.s))
 
     data_to_metrics = lifecycle.data_to_metrics
-    data_to_metrics.side_effect = lambda d: DummyMetrics(m=float(d.d))
+    # data_to_metrics.side_effect = lambda d: DummyMetrics()
 
     class DummyState(State):
         num = Data(
@@ -103,8 +103,8 @@ def test_data_lifecycle_hook():
         call.source_to_data(source),
         call.post_data_set(state, DummyData(d="123")),
         call.pre_metrics_set(state, DummyData(d="123")),
-        call.data_to_metrics(DummyData(d="123")),
-        call.post_metrics_set(state, DummyMetrics(m=123.0)),
+        call.data_to_metrics(DummyData(d="123"), ANY),
+        call.post_metrics_set(state),
         call.pre_del(state),
         call.post_del(state),
     ]

@@ -45,12 +45,12 @@ class Data:
         # Descriptor instance name
         self._data_name = None
 
-        # Initialize the actual instances inside the descriptor
-        self._data = data_class()
-        self._metrics = metrics_class()
-
     def __set_name__(self, owner, name):
         self._data_name = name
+
+        # Initialize the actual instances inside the descriptor
+        self._data = self.data_class()
+        self._metrics = self.metrics_class(name)
 
         if self.post_init is not None:
             self.post_init()
@@ -86,13 +86,10 @@ class Data:
                 self.pre_metrics_set(instance, new_data)
 
             # Data -> Metrics
-            new_metrics = self.data_to_metrics(new_data)
-
-            # Update Metrics
-            self._metrics = new_metrics
+            self.data_to_metrics(new_data, self._metrics)
 
             if self.post_metrics_set is not None:
-                self.post_metrics_set(instance, new_metrics)
+                self.post_metrics_set(instance)
 
     def __delete__(self, instance):
         if self.pre_del is not None:
