@@ -1,9 +1,9 @@
 import asyncio
 import logging
 
-from ..monitor import Monitor
-from ..strategy import Strategy
+from .monitor import Monitor
 from .state import State
+from .strategy import Strategy
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class Kernel:
             self.monitor_stop_events[monitor.name] = stop_event
 
             self.monitor_tasks[monitor.name] = asyncio.create_task(
-                monitor.run(stop_event),
+                monitor.run(self.state, stop_event),
                 name=monitor.name,
             )
 

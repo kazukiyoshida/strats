@@ -1,15 +1,14 @@
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
 
-S = TypeVar("S")
+from .state import State
 
 
-class Strategy(ABC, Generic[S]):
+class Strategy(ABC):
     @abstractmethod
     async def run(
         self,
-        state: S,
+        state: State,
         stop_event: asyncio.Event,
     ):
         pass
