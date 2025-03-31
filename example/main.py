@@ -28,7 +28,7 @@ def parse_args(argv):
 
 
 class ExampleState(State):
-    prices: Data(
+    prices = Data(
         source_class=ClientPrice,
         data_class=PricesData,
         metrics_class=PricesMetrics,
@@ -67,7 +67,8 @@ def main(argv=sys.argv[1:]):
 
     state = ExampleState()
 
-    prices_monitor = StreamMonitor[ExampleState, ClientPrice](
+    prices_monitor = StreamMonitor[ExampleState](
+        name="prices_monitor",
         state_data=state.prices,
         client=PricingStreamClient(instruments=["USD_JPY"]),
     )

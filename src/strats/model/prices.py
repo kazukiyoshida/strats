@@ -11,11 +11,11 @@ class PricesData:
 
 
 class PricesMetrics:
-    def __init__(self, prefix: str):
-        self.bid = Gauge(f"{prefix}_prices_bid", "")
-        self.ask = Gauge(f"{prefix}_prices_ask", "")
-        self.spread = Gauge(f"{prefix}_prices_spread", "")
-        self.update_count = Counter(f"{prefix}_prices_update_count", "")
+    def __init__(self, name: str):
+        self.bid = Gauge(f"{name}_prices_bid", "")
+        self.ask = Gauge(f"{name}_prices_ask", "")
+        self.spread = Gauge(f"{name}_prices_spread", "")
+        self.update_count = Counter(f"{name}_prices_update_count", "")
 
 
 def prices_data_to_prices_metrics(data: PricesData, metrics: PricesMetrics):

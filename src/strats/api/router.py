@@ -67,6 +67,11 @@ def response_strategy_info(kernel):
 
 def response_monitors_info(kernel):
     return {
-        name: {"is_alive": (name in kernel.monitor_tasks and not kernel.monitor_tasks[name].done())}
-        for name in kernel.monitors.keys()
+        monitor.name: {
+            "is_alive": (
+                monitor.name in kernel.monitor_tasks
+                and not kernel.monitor_tasks[monitor.name].done()
+            )
+        }
+        for monitor in kernel.monitors
     }

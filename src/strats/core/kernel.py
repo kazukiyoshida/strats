@@ -1,17 +1,27 @@
 import asyncio
 import logging
 
+from ..monitor import Monitor
+from ..strategy import Strategy
+from .state import State
+
 logger = logging.getLogger(__name__)
 
 
 class Kernel:
-    def __init__(self, *, state, strategy, monitors):
+    def __init__(
+        self,
+        *,
+        state: State,
+        strategy: Strategy,
+        monitors: list[Monitor],
+    ):
         self.state = state
 
         # There is no event loop yet, so don't create an `asyncio.Event`.
         self.monitors = monitors
-        self.monitor_tasks = {}
-        self.monitor_stop_events = {}
+        self.monitor_tasks: dict[str, asyncio.Task] = {}
+        self.monitor_stop_events: dict[str, asyncio.Event] = {}
 
         self.strategy = strategy
         self.strategy_task = None
@@ -47,17 +57,17 @@ class Kernel:
                 logger.error(f"(After cancel) Strategy task raised an exception: {e}")
 
     async def start_monitors(self):
-        for name, monitor in self.monitors.items():
-            task = self.monitor_tasks.get(name)
+        for monitor in self.monitors:
+            task = self.monitor_tasks.get(monitor.name)
             if task and not task.done():
                 continue
 
             stop_event = asyncio.Event()
-            self.monitor_stop_events[name] = stop_event
+            self.monitor_stop_events[monitor.name] = stop_event
 
-            self.monitor_tasks[name] = asyncio.create_task(
+            self.monitor_tasks[monitor.name] = asyncio.create_task(
                 monitor.run(stop_event),
-                name=name,
+                name=monitor.name,
             )
 
     async def stop_monitors(self, timeout=5.0):
