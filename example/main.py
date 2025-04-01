@@ -68,7 +68,7 @@ def main(argv=sys.argv[1:]):
     state = ExampleState()
 
     prices_monitor = StreamMonitor(
-        name="prices_monitor",
+        monitor_name="prices_monitor",
         data_name="prices",
         client=PricingStreamClient(instruments=["USD_JPY"]),
     )

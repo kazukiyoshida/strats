@@ -17,20 +17,20 @@ class StreamMonitor(Monitor):
     def __init__(
         self,
         client: StreamClient,
+        monitor_name: Optional[str] = None,
         data_name: Optional[str] = None,
-        name: Optional[str] = None,
         on_init: Optional[Callable] = None,
         on_delete: Optional[Callable] = None,
         on_pre_event: Optional[Callable] = None,
         on_post_event: Optional[Callable] = None,
     ):
+        if monitor_name is None:
+            monitor_name = f"StreamMonitor{StreamMonitor._counter}"
+            StreamMonitor._counter += 1
+        self._monitor_name = monitor_name
+
         self.client = client
         self.data_name = data_name
-
-        if name is None:
-            name = f"StreamMonitor{StreamMonitor._counter}"
-            StreamMonitor._counter += 1
-        self._name = name
 
         # Lifecycle Hook
         self.on_init = on_init
@@ -40,7 +40,7 @@ class StreamMonitor(Monitor):
 
     @property
     def name(self) -> str:
-        return self._name
+        return self._monitor_name
 
     async def run(self, state: State, stop_event: asyncio.Event):
         """
