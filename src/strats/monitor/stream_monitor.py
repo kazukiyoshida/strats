@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Optional, TypeVar
+from typing import Callable, Optional, TypeVar
 
 from strats.core import Monitor, State
 from strats.exchange import StreamClient
@@ -19,10 +19,10 @@ class StreamMonitor(Monitor):
         client: StreamClient,
         data_name: Optional[str] = None,
         name: Optional[str] = None,
-        init_callback=None,
-        del_callback=None,
-        pre_event_callback=None,
-        post_event_callback=None,
+        on_init: Optional[Callable] = None,
+        on_delete: Optional[Callable] = None,
+        on_pre_event: Optional[Callable] = None,
+        on_post_event: Optional[Callable] = None,
     ):
         self.client = client
         self.data_name = data_name
@@ -32,11 +32,11 @@ class StreamMonitor(Monitor):
             StreamMonitor._counter += 1
         self._name = name
 
-        # Callbacks
-        self.init_callback = init_callback
-        self.del_callback = del_callback
-        self.pre_event_callback = pre_event_callback
-        self.post_event_callback = post_event_callback
+        # Lifecycle Hook
+        self.on_init = on_init
+        self.on_delete = on_delete
+        self.on_pre_event = on_pre_event
+        self.on_post_event = on_post_event
 
     @property
     def name(self) -> str:
@@ -62,8 +62,8 @@ class StreamMonitor(Monitor):
 
         name = current.get_name()
 
-        if self.init_callback is not None:
-            self.init_callback()
+        if self.on_init is not None:
+            self.on_init()
 
         client = self.client.stream(stop_event)
 
@@ -86,8 +86,8 @@ class StreamMonitor(Monitor):
                 break
 
             if data_task in done:
-                if self.pre_event_callback is not None:
-                    self.pre_event_callback()
+                if self.on_pre_event is not None:
+                    self.on_pre_event()
 
                 # the body of an async generator function does not execute
                 # until the first `__anext__()` call. Therefore, exceptions
@@ -107,11 +107,11 @@ class StreamMonitor(Monitor):
                     except Exception as e:
                         logger.error(f"{name}: failed to update state.{self.data_name}: {e}")
 
-                if self.post_event_callback is not None:
-                    self.post_event_callback(data)
+                if self.on_post_event is not None:
+                    self.on_post_event(data)
 
-        if self.del_callback is not None:
-            self.del_callback()
+        if self.on_delete is not None:
+            self.on_delete()
 
         await client.aclose()
         logger.info(f"{name}: stopped")

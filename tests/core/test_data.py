@@ -54,20 +54,15 @@ def test_data_lifecycle_hook():
     lifecycle = Mock()
 
     # Mock children
-    pre_init = lifecycle.pre_init
-    post_init = lifecycle.post_init
-    pre_data_set = lifecycle.pre_data_set
-    post_data_set = lifecycle.post_data_set
-    pre_metrics_set = lifecycle.pre_metrics_set
-    post_metrics_set = lifecycle.post_metrics_set
-    pre_del = lifecycle.pre_del
-    post_del = lifecycle.post_del
+    on_init = lifecycle.on_init
+    on_delete = lifecycle.on_delete
+    on_pre_event = lifecycle.on_pre_event
+    on_post_event = lifecycle.on_post_event
 
     source_to_data = lifecycle.source_to_data
     source_to_data.side_effect = lambda s: DummyData(d=str(s.s))
 
     data_to_metrics = lifecycle.data_to_metrics
-    # data_to_metrics.side_effect = lambda d: DummyMetrics()
 
     class DummyState(State):
         num = Data(
@@ -76,14 +71,10 @@ def test_data_lifecycle_hook():
             metrics_class=DummyMetrics,
             source_to_data=source_to_data,
             data_to_metrics=data_to_metrics,
-            pre_init=pre_init,
-            post_init=post_init,
-            pre_data_set=pre_data_set,
-            post_data_set=post_data_set,
-            pre_metrics_set=pre_metrics_set,
-            post_metrics_set=post_metrics_set,
-            pre_del=pre_del,
-            post_del=post_del,
+            on_init=on_init,
+            on_delete=on_delete,
+            on_pre_event=on_pre_event,
+            on_post_event=on_post_event,
         )
 
     state = DummyState()
@@ -97,14 +88,10 @@ def test_data_lifecycle_hook():
 
     # Test the calls order
     assert lifecycle.mock_calls == [
-        call.pre_init(),
-        call.post_init(),
-        call.pre_data_set(state, source),
+        call.on_init(),
+        call.on_pre_event(state, source),
         call.source_to_data(source),
-        call.post_data_set(state, DummyData(d="123")),
-        call.pre_metrics_set(state, DummyData(d="123")),
         call.data_to_metrics(DummyData(d="123"), ANY),
-        call.post_metrics_set(state),
-        call.pre_del(state),
-        call.post_del(state),
+        call.on_post_event(state, DummyData(d="123")),
+        call.on_delete(state),
     ]
