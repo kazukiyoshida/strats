@@ -67,7 +67,7 @@ class Data:
         self._data = new_data
 
         if self.enqueue:
-            instance._sync_queue.put([new_source, new_data])
+            instance.sync_queue.put([new_source, new_data])
 
         # Update Metrics if needed
         if self.data_to_metrics is not None:

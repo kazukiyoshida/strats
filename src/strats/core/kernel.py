@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import threading
 
 from .monitor import Monitor
 from .state import State
@@ -17,6 +18,7 @@ class Kernel:
         monitors: list[Monitor],
     ):
         self.state = state
+        self.state_stop_event = None
 
         # There is no event loop yet, so don't create an `asyncio.Event`.
         self.monitors = monitors
@@ -28,6 +30,8 @@ class Kernel:
         self.strategy_stop_event = None
 
     async def start_strategy(self):
+        self.state.set_queues()
+
         if self.strategy_task and not self.strategy_task.done():
             return
 
@@ -57,6 +61,11 @@ class Kernel:
                 logger.error(f"(After cancel) Strategy task raised an exception: {e}")
 
     async def start_monitors(self):
+        self.state.set_queues()
+
+        self.state_stop_event = threading.Event()
+        self.state.run(self.state_stop_event)
+
         for monitor in self.monitors:
             task = self.monitor_tasks.get(monitor.name)
             if task and not task.done():
@@ -71,6 +80,8 @@ class Kernel:
             )
 
     async def stop_monitors(self, timeout=5.0):
+        self.state_stop_event.set()
+
         for stop_event in self.monitor_stop_events.values():
             stop_event.set()
 

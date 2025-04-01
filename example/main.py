@@ -4,7 +4,7 @@ import logging
 import sys
 
 import strats_oanda
-from strats_oanda.client import PricingStreamClient
+from strats_oanda.client import PricingStreamClient, TransactionClient
 from strats_oanda.converter import client_price_to_prices_data
 from strats_oanda.model import ClientPrice
 
@@ -44,8 +44,16 @@ class ExampleStrategy(Strategy):
         stop_event: asyncio.Event,
     ):
         while not stop_event.is_set():
-            await asyncio.sleep(2)
-            print("strategy..", state.prices)
+            try:
+                item = await state.queue.get()
+            except Exception as e:
+                logger.error(f"failed to get item. error: {e}")
+                break
+
+            if item is None:
+                continue
+
+            print(f"CONSUMED: {item}")
 
 
 def configure_oanda(env: str):
@@ -73,6 +81,11 @@ def main(argv=sys.argv[1:]):
         client=PricingStreamClient(instruments=["USD_JPY"]),
     )
 
+    transaction_monitor = StreamMonitor(
+        monitor_name="transaction_monitor",
+        client=TransactionClient(),
+    )
+
     strategy = ExampleStrategy()
 
     Strats(
@@ -80,6 +93,7 @@ def main(argv=sys.argv[1:]):
         strategy=strategy,
         monitors=[
             prices_monitor,
+            transaction_monitor,
         ],
     ).serve()
 
