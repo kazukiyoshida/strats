@@ -106,5 +106,7 @@ jobs:
       env:
         PIP_DEFAULT_TIMEOUT: 100
       with:
-        verbose: true
+        # Avoid "This filename has already been used" error from TestPyPI
+        # cf. https://github.com/pypa/packaging.python.org/issues/804
+        skip-existing: true
         repository-url: https://test.pypi.org/legacy/
