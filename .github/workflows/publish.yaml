@@ -1,6 +1,6 @@
 # cf. https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
 name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
-on: workflow_dispatch
+on: push
 jobs:
 
   build:
