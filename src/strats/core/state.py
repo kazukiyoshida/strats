@@ -14,7 +14,6 @@ class State:
         To avoid attaching them to the default event loop,
         this function must be called after the FastAPI server has started.
         """
-
         if not hasattr(self, "_initialized"):
             self.sync_queue = queue.Queue()
             self.queue = asyncio.Queue()

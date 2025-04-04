@@ -66,7 +66,7 @@ class Data:
         # Update Data
         self._data = new_data
 
-        if self.enqueue:
+        if self.enqueue and hasattr(instance, "sync_queue"):
             instance.sync_queue.put([new_source, new_data])
 
         # Update Metrics if needed
