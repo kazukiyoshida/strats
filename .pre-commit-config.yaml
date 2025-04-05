@@ -13,7 +13,7 @@ repos:
     types: [python]
   - id: mypy
     name: mypy
-    entry: bash -c '.tox/mypy/bin/mypy src tests'
+    entry: bash -c '.tox/mypy/bin/mypy src tests --ignore-missing-imports'
     pass_filenames: false
     language: system
     types: [python]

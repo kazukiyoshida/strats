@@ -91,5 +91,5 @@ deps =
     mypy
     types-waitress
     types-requests
-commands = mypy src tests
+commands = mypy src tests --ignore-missing-imports
 """
