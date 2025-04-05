@@ -65,6 +65,7 @@ ignore = [
     "D1",    # Allow undocumented
     "E741",  # Allow to use variables named 'I', 'O', or 'l'
     "B008",  # Allow FastAPI's Depends (`def hoge(a = Depends(get_a)):`)
+    "B904",  # Allow raise in except clause
 ]
 
 [tool.tox]
@@ -73,7 +74,9 @@ legacy_tox_ini = """
 envlist = lint, mypy, py39, py310, py311, py312
 
 [testenv]
-deps = pytest
+deps =
+    pytest
+    requests
 commands =
     pytest tests -sv
 
@@ -87,5 +90,6 @@ commands =
 deps =
     mypy
     types-waitress
+    types-requests
 commands = mypy src tests
 """

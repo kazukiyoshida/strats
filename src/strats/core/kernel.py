@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import threading
+from typing import Optional
 
 from .monitor import Monitor
 from .state import State
@@ -13,9 +14,9 @@ class Kernel:
     def __init__(
         self,
         *,
-        state: State,
-        strategy: Strategy,
-        monitors: list[Monitor],
+        state: Optional[State] = None,
+        strategy: Optional[Strategy] = None,
+        monitors: Optional[list[Monitor]] = None,
     ):
         self.state = state
         self.state_stop_event = None
@@ -30,7 +31,11 @@ class Kernel:
         self.strategy_stop_event = None
 
     async def start_strategy(self):
-        self.state.set_queues()
+        if self.strategy is None:
+            raise ValueError("Missing strategy configuration")
+
+        if self.state is not None:
+            self.state.set_queues()
 
         if self.strategy_task and not self.strategy_task.done():
             return
@@ -45,6 +50,9 @@ class Kernel:
         )
 
     async def stop_strategy(self, timeout=5.0):
+        if self.strategy is None:
+            raise ValueError("Missing strategy configuration")
+
         self.strategy_stop_event.set()
 
         try:
@@ -61,7 +69,11 @@ class Kernel:
                 logger.error(f"(After cancel) Strategy task raised an exception: {e}")
 
     async def start_monitors(self):
-        self.state.set_queues()
+        if self.monitors is None:
+            raise ValueError("Missing monitors configuration")
+
+        if self.state is not None:
+            self.state.set_queues()
 
         self.state_stop_event = threading.Event()
         self.state.run(self.state_stop_event)
@@ -80,6 +92,9 @@ class Kernel:
             )
 
     async def stop_monitors(self, timeout=5.0):
+        if self.monitors is None:
+            raise ValueError("Missing monitors configuration")
+
         self.state_stop_event.set()
 
         for stop_event in self.monitor_stop_events.values():
