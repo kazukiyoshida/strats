@@ -45,9 +45,7 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
-    name: >-
-      Sign the distribution with Sigstore
-      and upload them to GitHub Release
+    name: Sign with Sigstore & Create Release
     needs:
     - publish-to-pypi
     runs-on: ubuntu-latest
