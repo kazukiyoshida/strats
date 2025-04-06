@@ -68,6 +68,9 @@ ignore = [
     "B904",  # Allow raise in except clause
 ]
 
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
@@ -76,6 +79,7 @@ envlist = lint, mypy, py39, py310, py311, py312
 [testenv]
 deps =
     pytest
+    pytest-asyncio
     requests
 commands =
     pytest tests -sv
