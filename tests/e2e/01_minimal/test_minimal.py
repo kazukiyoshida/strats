@@ -12,7 +12,7 @@ BASE_URL = "http://localhost:8000"
 @pytest.fixture(scope="function")
 def app_process():
     proc = subprocess.Popen(
-        ["python", "tests/e2e/01_minimal/main.py"],
+        ["python", "tests/e2e/01_minimal/minimal.py"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
