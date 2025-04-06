@@ -75,8 +75,8 @@ class Kernel:
         if self.state is not None:
             self.state.set_queues()
 
-        self.state_stop_event = threading.Event()
-        self.state.run(self.state_stop_event)
+            self.state_stop_event = threading.Event()
+            self.state.run(self.state_stop_event)
 
         for monitor in self.monitors:
             task = self.monitor_tasks.get(monitor.name)
@@ -95,7 +95,8 @@ class Kernel:
         if self.monitors is None:
             raise ValueError("Missing monitors configuration")
 
-        self.state_stop_event.set()
+        if self.state is not None:
+            self.state_stop_event.set()
 
         for stop_event in self.monitor_stop_events.values():
             stop_event.set()
