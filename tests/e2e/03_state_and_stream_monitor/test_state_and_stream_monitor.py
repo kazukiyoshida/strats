@@ -1,4 +1,5 @@
 import asyncio
+import re
 import subprocess
 import sys
 import time
@@ -13,7 +14,7 @@ BASE_URL = "http://localhost:8000"
 @pytest.fixture(scope="function")
 def app_process():
     proc = subprocess.Popen(
-        ["python", "tests/e2e/02_stream_monitor/stream_monitor.py"],
+        ["python", "tests/e2e/03_state_and_stream_monitor/state_and_stream_monitor.py"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -33,7 +34,7 @@ def app_process():
 
 
 @pytest.mark.asyncio
-async def test_stream_monitor(app_process):
+async def test_state_and_stream_monitor(app_process):
     # >> healthz, metrics
 
     res = requests.get(urljoin(BASE_URL, "/healthz"))
@@ -88,6 +89,13 @@ async def test_stream_monitor(app_process):
 
     await asyncio.sleep(1)
 
+    res = requests.get(urljoin(BASE_URL, "/metrics"))
+    assert res.status_code == 200
+    assert extract_unlabeled_metric_value(res.text, "prices_prices_bid") == 100.0
+    assert extract_unlabeled_metric_value(res.text, "prices_prices_ask") == 101.0
+    assert extract_unlabeled_metric_value(res.text, "prices_prices_spread") == 1.0
+    assert extract_unlabeled_metric_value(res.text, "prices_prices_update_count_total") == 1.0
+
     res = requests.post(urljoin(BASE_URL, "/monitors/stop"))
     expect = {
         "is_configured": True,
@@ -99,3 +107,11 @@ async def test_stream_monitor(app_process):
     }
     assert res.status_code == 200
     assert res.json() == expect
+
+
+def extract_unlabeled_metric_value(body: str, metric_name: str) -> float:
+    pattern = rf"^{re.escape(metric_name)} ([0-9.e+-]+)"
+    match = re.search(pattern, body, re.MULTILINE)
+    if not match:
+        raise ValueError(f"Metric {metric_name} not found")
+    return float(match.group(1))
