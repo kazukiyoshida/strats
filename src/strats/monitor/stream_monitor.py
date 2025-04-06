@@ -42,19 +42,20 @@ class StreamMonitor(Monitor):
     def name(self) -> str:
         return self._monitor_name
 
-    async def run(self, state: State, stop_event: asyncio.Event):
+    async def run(self, state: Optional[State], stop_event: asyncio.Event):
         """
         Monitor を開始する.
         戻り値はなく、あくまで client からの msg を state_data に流し込むだけ.
         stop_event 通知により Monitor は停止する. この stop_event は client と共有される.
         """
-        if self.data_name:
-            if self.data_name in type(state).__dict__:
-                data_descriptor = type(state).__dict__[self.data_name]
+        if state is not None:
+            if self.data_name:
+                if self.data_name in type(state).__dict__:
+                    data_descriptor = type(state).__dict__[self.data_name]
+                else:
+                    raise ValueError(f"data_name: `{self.data_name}` is not found in State")
             else:
-                raise ValueError(f"data_name: `{self.data_name}` is not found in State")
-        else:
-            data_descriptor = None
+                data_descriptor = None
 
         current = asyncio.current_task()
         if current is None:
