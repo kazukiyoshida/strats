@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2
+
+Released 2025-04-10
+
+- Make Srategy, State and Monitors optional
+- Enhance PyPI project details
+- E2E Test
+
 ## 0.1.1
 
 Released 2025-04-05
