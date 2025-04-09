@@ -19,7 +19,7 @@ def app_process():
         stderr=subprocess.PIPE,
     )
     # wait the application is running
-    time.sleep(1)
+    time.sleep(0.5)
 
     if proc.poll() is not None:
         stdout, stderr = proc.communicate()
@@ -87,7 +87,7 @@ async def test_state_and_stream_monitor(app_process):
     assert res.status_code == 200
     assert res.json() == expect
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
 
     res = requests.get(urljoin(BASE_URL, "/metrics"))
     assert res.status_code == 200

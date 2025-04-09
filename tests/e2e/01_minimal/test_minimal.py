@@ -17,7 +17,7 @@ def app_process():
         stderr=subprocess.PIPE,
     )
     # wait the application is running
-    time.sleep(1)
+    time.sleep(0.5)
 
     if proc.poll() is not None:
         stdout, stderr = proc.communicate()
