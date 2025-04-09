@@ -36,7 +36,7 @@ class State:
         while not stop_event.is_set():
             try:
                 item = self.sync_queue.get(timeout=1)
-            except self.queue.Empty:
+            except queue.Empty:
                 continue
 
             if item is None:
