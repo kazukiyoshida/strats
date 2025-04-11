@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+Released 2025-04-11
+
+- Command Line Tool
+
 ## 0.1.2
 
 Released 2025-04-10
