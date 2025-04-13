@@ -16,11 +16,11 @@ BANNER = r"""
 """
 
 
-def create_get_kernel(kernel):
-    def get_kernel():
+def kernel_getter_factory(kernel):
+    def kernel_getter():
         return kernel
 
-    return get_kernel
+    return kernel_getter
 
 
 class Strats(Kernel):
@@ -30,7 +30,8 @@ class Strats(Kernel):
 
         app = FastAPI()
         app.include_router(router)
-        app.dependency_overrides[get_kernel] = create_get_kernel(self)
+        app.dependency_overrides[get_kernel] = kernel_getter_factory(self)
+
         logger.info(BANNER)
 
         # Use lower-level uvicorn API to handle SIGINT/SIGTERM properly
