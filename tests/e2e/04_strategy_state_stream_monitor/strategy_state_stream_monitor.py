@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from typing import Optional
@@ -11,6 +12,8 @@ from strats.model import (
     prices_data_to_prices_metrics,
 )
 from strats.monitor import StreamMonitor
+
+logger = logging.getLogger(__name__)
 
 
 def _id(p: PricesData) -> PricesData:
@@ -49,17 +52,16 @@ class TestStrategy(Strategy):
         while not stop_event.is_set():
             try:
                 item = await asyncio.wait_for(state.queue.get(), timeout=1)
-                print(f"strategy > bid: {item[0].bid}")
+                logger.info(f"strategy > bid: {item[0].bid}")
             except asyncio.TimeoutError:
                 continue
             except Exception as e:
-                print(f"got an error: {e}")
+                logger.info(f"got an error: {e}")
                 continue
 
 
 def main():
     stream_monitor = StreamMonitor(
-        monitor_name="stream_monitor",
         data_name="prices",
         client=TestStreamClient(),
     )
