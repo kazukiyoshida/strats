@@ -29,4 +29,11 @@ class Strats(Kernel):
         app.include_router(router)
         app.dependency_overrides[get_kernel] = create_get_kernel(self)
         logger.info(BANNER)
-        uvicorn.run(app=app)
+
+        # Use lower-level uvicorn API to handle SIGINT/SIGTERM properly
+        config = uvicorn.Config(app=app, host=host, port=port)
+        server = uvicorn.Server(config)
+        try:
+            server.run()
+        except KeyboardInterrupt:
+            pass
