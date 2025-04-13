@@ -104,5 +104,6 @@ class StreamMonitor(Monitor):
         if self.on_delete is not None:
             self.on_delete()
 
+        await asyncio.sleep(0.1)  # wait the async generator in client to stop
         await client.aclose()
         logger.info(f"{self.name} stopped")
