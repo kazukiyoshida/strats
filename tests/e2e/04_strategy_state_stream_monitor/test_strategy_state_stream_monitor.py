@@ -99,9 +99,9 @@ async def test_state_and_stream_monitor(app_process):
     assert extract_unlabeled_metric_value(res.text, "prices_prices_spread") == 1.0
     assert extract_unlabeled_metric_value(res.text, "prices_prices_update_count_total") == 1.0
 
-    stdouts = get_stdout_list(app_process)
+    stderrs = get_stderr_list(app_process)
     # the last stdout is "GET /metrics HTTP/1.1 200 OK"
-    assert stdouts[-2] == "strategy > bid: 100"
+    assert "INFO:__main__:strategy > bid: 100" in stderrs[-2]
 
     # >> stop
 
@@ -131,17 +131,17 @@ def extract_unlabeled_metric_value(body: str, metric_name: str) -> float:
     return float(match.group(1))
 
 
-def read_stdout_lines(process, output_queue):
-    for line in process.stdout:
+def read_stderr_lines(process, output_queue):
+    for line in process.stderr:
         output_queue.put(line)
     output_queue.put(None)  # signal end of stream
 
 
-def get_stdout_list(process, timeout=1) -> list[str]:
-    stdouts = []
+def get_stderr_list(process, timeout=1) -> list[str]:
+    stderrs = []
 
     q: queue.Queue = queue.Queue()
-    t = threading.Thread(target=read_stdout_lines, args=(process, q), daemon=True)
+    t = threading.Thread(target=read_stderr_lines, args=(process, q), daemon=True)
     t.start()
 
     start_time = time.time()
@@ -150,8 +150,8 @@ def get_stdout_list(process, timeout=1) -> list[str]:
             line = q.get(timeout=0.1)
             if line is None:  # end of stream
                 break
-            stdouts.append(line.strip())
+            stderrs.append(line.strip())
         except queue.Empty:
             if time.time() - start_time > timeout:
                 break
-    return stdouts
+    return stderrs
