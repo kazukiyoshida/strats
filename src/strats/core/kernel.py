@@ -91,3 +91,4 @@ class Kernel:
 
         if self.state is not None:
             self.state_stop_event.set()
+            self.state.sync_to_async_queue_thread.join()
