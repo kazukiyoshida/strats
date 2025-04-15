@@ -34,63 +34,23 @@ class StreamMonitor(Monitor):
     def name(self) -> str:
         return f"StreamMonitor/{self.data_name}"
 
-    async def run(self, state: Optional[State], stop_event: asyncio.Event):
-        """
-        Monitor を開始する.
-        戻り値はなく、あくまで client からの msg を state_data に流し込むだけ.
-        stop_event 通知により Monitor は停止する. この stop_event は client と共有される.
-        """
-        logger.info(f"start {self.name}")
+    async def run(self, state: Optional[State]):
+        try:
+            logger.info(f"{self.name} start")
 
-        if state is not None:
-            if self.data_name:
+            data_descriptor = None
+            if state is not None and self.data_name:
                 if self.data_name in type(state).__dict__:
                     data_descriptor = type(state).__dict__[self.data_name]
                 else:
                     raise ValueError(f"data_name: `{self.data_name}` is not found in State")
-            else:
-                data_descriptor = None
 
-        if self.on_init is not None:
-            self.on_init()
+            if self.on_init is not None:
+                self.on_init()
 
-        client = self.client.stream(stop_event)
-
-        while not stop_event.is_set():
-            data_task = asyncio.create_task(
-                client.__anext__(),
-                name="stream-monitor-data-task",
-            )
-            stop_task = asyncio.create_task(
-                stop_event.wait(),
-                name="stream-monitor-stop-event",
-            )
-
-            done, pending = await asyncio.wait(
-                [data_task, stop_task],
-                return_when=asyncio.FIRST_COMPLETED,
-            )
-
-            for task in pending:
-                task.cancel()
-
-            if stop_task in done:
-                break
-
-            if data_task in done:
+            async for data in self.client.stream():
                 if self.on_pre_event is not None:
                     self.on_pre_event()
-
-                # the body of an async generator function does not execute
-                # until the first `__anext__()` call. Therefore, exceptions
-                # raised before the first `yield` are not visible until iteration begins.
-                try:
-                    data = data_task.result()
-                except StopAsyncIteration:
-                    break
-                except Exception as e:
-                    logger.error(f"{self.name} streaming client got error: {e}")
-                    break
 
                 if data_descriptor is not None:
                     try:
@@ -101,9 +61,13 @@ class StreamMonitor(Monitor):
                 if self.on_post_event is not None:
                     self.on_post_event(data)
 
-        if self.on_delete is not None:
-            self.on_delete()
-
-        await asyncio.sleep(0.1)  # wait the async generator in client to stop
-        await client.aclose()
-        logger.info(f"{self.name} stopped")
+        except asyncio.CancelledError:
+            # To avoid "ERROR:asyncio:Task exception was never retrieved",
+            # Re-raise the CancelledError
+            raise
+        except Exception as e:
+            logger.error(f"Unhandled exception in {self.name}: {e}")
+        finally:
+            if self.on_delete is not None:
+                self.on_delete()
+            logger.info(f"{self.name} stopped")

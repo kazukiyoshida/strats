@@ -21,13 +21,18 @@ def _id(p: PricesData) -> PricesData:
 
 
 class TestStreamClient(StreamClient):
-    async def stream(self, stop_event: asyncio.Event) -> AsyncGenerator[PricesData]:
-        for i in range(100):
-            yield PricesData(
-                bid=Decimal("100") + Decimal(i),
-                ask=Decimal("101") + Decimal(i),
-            )
-            await asyncio.sleep(5)
+    async def stream(self) -> AsyncGenerator[PricesData]:
+        try:
+            for i in range(100):
+                yield PricesData(
+                    bid=Decimal("100") + Decimal(i),
+                    ask=Decimal("101") + Decimal(i),
+                )
+                await asyncio.sleep(5)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            pass
 
 
 class TestState(State):
@@ -41,23 +46,18 @@ class TestState(State):
 
 
 class TestStrategy(Strategy):
-    async def run(
-        self,
-        state: Optional[State],
-        stop_event: asyncio.Event,
-    ):
+    async def run(self, state: Optional[State]):
         if state is None:
             raise ValueError("state is not found")
 
-        while not stop_event.is_set():
-            try:
-                item = await asyncio.wait_for(state.queue.get(), timeout=1)
+        try:
+            while True:
+                item = await state.queue.get()
                 logger.info(f"strategy > bid: {item[0].bid}")
-            except asyncio.TimeoutError:
-                continue
-            except Exception as e:
-                logger.info(f"got an error: {e}")
-                continue
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            pass
 
 
 def main():

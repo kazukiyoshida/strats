@@ -24,11 +24,9 @@ class Kernel:
         # There is no event loop yet, so don't create an `asyncio.Event`.
         self.monitors = monitors
         self.monitor_tasks: dict[str, asyncio.Task] = {}
-        self.monitor_stop_events: dict[str, asyncio.Event] = {}
 
         self.strategy = strategy
         self.strategy_task = None
-        self.strategy_stop_event = None
 
     async def start_strategy(self):
         if self.strategy is None:
@@ -40,33 +38,22 @@ class Kernel:
         if self.strategy_task and not self.strategy_task.done():
             return
 
-        self.strategy_stop_event = asyncio.Event()
         self.strategy_task = asyncio.create_task(
-            self.strategy.run(
-                self.state,
-                self.strategy_stop_event,
-            ),
+            self.strategy.run(self.state),
             name="strategy",
         )
 
     async def stop_strategy(self, timeout=5.0):
         if self.strategy is None:
             raise ValueError("Missing strategy configuration")
+        if self.strategy_task.done():
+            raise ValueError("Strategy is already stopped")
 
-        self.strategy_stop_event.set()
-
+        self.strategy_task.cancel()
         try:
-            await asyncio.wait_for(self.strategy_task, timeout=timeout)
-        except asyncio.TimeoutError:
-            logger.error("Timeout waiting for strategy to stop. Forcing cancellation...")
-
-            if not self.strategy_task.done():
-                self.strategy_task.cancel()
-
-            try:
-                await self.strategy_task
-            except Exception as e:
-                logger.error(f"(After cancel) Strategy task raised an exception: {e}")
+            await self.strategy_task
+        except asyncio.CancelledError:
+            pass
 
     async def start_monitors(self):
         if self.monitors is None:
@@ -83,11 +70,8 @@ class Kernel:
             if task and not task.done():
                 continue
 
-            stop_event = asyncio.Event()
-            self.monitor_stop_events[monitor.name] = stop_event
-
             self.monitor_tasks[monitor.name] = asyncio.create_task(
-                monitor.run(self.state, stop_event),
+                monitor.run(self.state),
                 name=monitor.name,
             )
 
@@ -95,29 +79,15 @@ class Kernel:
         if self.monitors is None:
             raise ValueError("Missing monitors configuration")
 
+        for task in self.monitor_tasks.values():
+            if not task.done():
+                # we should await canceled task complete
+                # cf. https://docs.python.org/ja/3.13/library/asyncio-task.html#asyncio.Task.cancel
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+
         if self.state is not None:
             self.state_stop_event.set()
-
-        for stop_event in self.monitor_stop_events.values():
-            stop_event.set()
-
-        try:
-            results = await asyncio.wait_for(
-                asyncio.gather(*self.monitor_tasks.values(), return_exceptions=True),
-                timeout=timeout,
-            )
-            for i, result in enumerate(results):
-                if isinstance(result, Exception):
-                    logger.error(f"Monitor task {i} raised an exception: {result}")
-
-        except asyncio.TimeoutError:
-            logger.error("Timeout waiting for monitors to stop. Forcing cancellation...")
-
-            for task in self.monitor_tasks.values():
-                if not task.done():
-                    task.cancel()
-
-            results = await asyncio.gather(*self.monitor_tasks.values(), return_exceptions=True)
-            for i, result in enumerate(results):
-                if isinstance(result, Exception):
-                    logger.error(f"(After cancel) Monitor task {i} raised an exception: {result}")
