@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.4
+
+Released 2025-04-15
+
+- Fix signal handling
+- Update Monitor IF
+- Improve log readability
+- Use cancel method instead of stop event
+
 ## 0.1.3
 
 Released 2025-04-11
