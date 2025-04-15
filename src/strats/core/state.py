@@ -21,17 +21,18 @@ class State:
 
     def run(self, stop_event: threading.Event):
         loop = asyncio.get_running_loop()
-        threading.Thread(
+        self.sync_to_async_queue_thread = threading.Thread(
             target=self._sync_to_async_queue,
             args=(loop, stop_event),
-        ).start()
+        )
+        self.sync_to_async_queue_thread.start()
 
     def _sync_to_async_queue(
         self,
         loop: asyncio.AbstractEventLoop,
         stop_event: threading.Event,
     ):
-        logger.info("start sync_to_async_queue thread")
+        logger.info("sync_to_async_queue thread start")
 
         while not stop_event.is_set():
             try:
@@ -47,4 +48,4 @@ class State:
             # cf. https://docs.python.org/ja/3.13/library/asyncio-eventloop.html#asyncio.loop.call_soon_threadsafe
             loop.call_soon_threadsafe(self.queue.put_nowait, item)
 
-        logger.info("sync_to_async_queue thread exiting gracefully")
+        logger.info("sync_to_async_queue thread stopped")

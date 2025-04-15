@@ -7,10 +7,15 @@ from strats.monitor import StreamMonitor
 
 
 class TestStreamClient(StreamClient):
-    async def stream(self, stop_event: asyncio.Event) -> AsyncGenerator[int]:
-        for i in range(10):
-            await asyncio.sleep(1)
-            yield i
+    async def stream(self) -> AsyncGenerator[int]:
+        try:
+            for i in range(10):
+                await asyncio.sleep(1)
+                yield i
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            pass
 
 
 def main():

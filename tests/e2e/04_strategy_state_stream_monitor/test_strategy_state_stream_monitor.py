@@ -101,7 +101,7 @@ async def test_state_and_stream_monitor(app_process):
 
     stderrs = get_stderr_list(app_process)
     # the last stdout is "GET /metrics HTTP/1.1 200 OK"
-    assert "INFO:__main__:strategy > bid: 100" in stderrs[-2]
+    assert "INFO : __main__ : strategy > bid: 100" in stderrs[-2]
 
     # >> stop
 
