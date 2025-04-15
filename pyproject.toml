@@ -1,6 +1,6 @@
 [project]
 name = "strats"
-version = "0.1.3"
+version = "0.1.4"
 description = "Strats: system trading framework"
 readme = "README.md"
 authors = [
