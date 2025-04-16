@@ -23,6 +23,7 @@ class StreamMonitor(Monitor):
         on_delete: Optional[Callable] = None,
         on_pre_event: Optional[Callable] = None,
         on_post_event: Optional[Callable] = None,
+        start_delay_seconds: int = 0,
     ):
         if monitor_name is None:
             monitor_name = f"StreamMonitor{StreamMonitor._counter}"
@@ -38,11 +39,16 @@ class StreamMonitor(Monitor):
         self.on_pre_event = on_pre_event
         self.on_post_event = on_post_event
 
+        self.start_delay_seconds = start_delay_seconds
+
     @property
     def name(self) -> str:
         return self._monitor_name
 
     async def run(self, state: Optional[State]):
+        if self.start_delay_seconds > 0:
+            await asyncio.sleep(self.start_delay_seconds)
+
         try:
             logger.info(f"{self.name} start")
 
