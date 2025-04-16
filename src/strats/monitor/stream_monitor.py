@@ -31,6 +31,7 @@ class StreamMonitor(Monitor):
         self._monitor_name = monitor_name
 
         self.client = client
+        self.client.set_name(f"{client.__class__.__name__} for {self.name}")
         self.data_name = data_name
 
         # Lifecycle Hook
