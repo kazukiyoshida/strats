@@ -62,6 +62,7 @@ class TestStrategy(Strategy):
 
 def main():
     stream_monitor = StreamMonitor(
+        monitor_name="stream_monitor",
         data_name="prices",
         client=TestStreamClient(),
     )
