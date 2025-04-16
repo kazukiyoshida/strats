@@ -1,14 +1,11 @@
 import asyncio
 import logging
-from typing import Callable, Optional, TypeVar
+from typing import Callable, Optional
 
 from strats.core import Monitor, State
 from strats.exchange import StreamClient
 
 logger = logging.getLogger(__name__)
-
-
-S = TypeVar("S")
 
 
 class StreamMonitor(Monitor):
