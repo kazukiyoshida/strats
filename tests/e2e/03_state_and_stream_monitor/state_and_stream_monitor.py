@@ -17,6 +17,9 @@ def _id(p: PricesData) -> PricesData:
 
 
 class TestStreamClient(StreamClient):
+    def set_name(self, name: str):
+        self.name = name
+
     async def stream(self) -> AsyncGenerator[PricesData]:
         try:
             for i in range(10):
@@ -43,6 +46,7 @@ class TestState(State):
 
 def main():
     stream_monitor = StreamMonitor(
+        monitor_name="stream_monitor",
         data_name="prices",
         client=TestStreamClient(),
     )
