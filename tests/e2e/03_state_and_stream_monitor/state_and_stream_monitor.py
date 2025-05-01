@@ -21,17 +21,12 @@ class TestStreamClient(StreamClient):
         self.name = name
 
     async def stream(self) -> AsyncGenerator[PricesData]:
-        try:
-            for i in range(10):
-                yield PricesData(
-                    bid=Decimal("100") + Decimal(i),
-                    ask=Decimal("101") + Decimal(i),
-                )
-                await asyncio.sleep(10)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            pass
+        for i in range(10):
+            yield PricesData(
+                bid=Decimal("100") + Decimal(i),
+                ask=Decimal("101") + Decimal(i),
+            )
+            await asyncio.sleep(10)
 
 
 class TestState(State):
