@@ -38,18 +38,6 @@ class Kernel:
         if self.strategy_task and not self.strategy_task.done():
             return
 
-        def _handle_error(func):
-            async def wrapper(*args, **kwargs):
-                try:
-                    await func(*args, **kwargs)
-                except asyncio.CancelledError:
-                    logger.info("handle cancel process")
-                    raise
-                except Exception as e:
-                    logger.error(f"got unexpected exception: {e}")
-
-            return wrapper
-
         self.strategy_task = asyncio.create_task(
             _handle_error(self.strategy.run)(self.state),
             name="strategy",
@@ -83,7 +71,7 @@ class Kernel:
                 continue
 
             self.monitor_tasks[monitor.name] = asyncio.create_task(
-                monitor.run(self.state),
+                _handle_error(monitor.run)(self.state),
                 name=monitor.name,
             )
 
@@ -104,3 +92,16 @@ class Kernel:
         if self.state is not None:
             self.state_stop_event.set()
             self.state.sync_to_async_queue_thread.join()
+
+
+def _handle_error(func):
+    async def wrapper(*args, **kwargs):
+        try:
+            await func(*args, **kwargs)
+        except asyncio.CancelledError:
+            logger.info("handle cancel process")
+            raise
+        except Exception as e:
+            logger.error(f"got unexpected exception: {e}")
+
+    return wrapper

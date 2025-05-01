@@ -11,14 +11,9 @@ class TestStreamClient(StreamClient):
         self.name = name
 
     async def stream(self) -> AsyncGenerator[int]:
-        try:
-            for i in range(10):
-                await asyncio.sleep(1)
-                yield i
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            pass
+        for i in range(10):
+            await asyncio.sleep(1)
+            yield i
 
 
 def main():
