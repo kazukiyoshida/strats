@@ -38,8 +38,20 @@ class Kernel:
         if self.strategy_task and not self.strategy_task.done():
             return
 
+        def _handle_error(func):
+            async def wrapper(*args, **kwargs):
+                try:
+                    await func(*args, **kwargs)
+                except asyncio.CancelledError:
+                    logger.info("handle cancel process")
+                    raise
+                except Exception as e:
+                    logger.error(f"got unexpected exception: {e}")
+
+            return wrapper
+
         self.strategy_task = asyncio.create_task(
-            self.strategy.run(self.state),
+            _handle_error(self.strategy.run)(self.state),
             name="strategy",
         )
 
