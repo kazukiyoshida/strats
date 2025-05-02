@@ -12,7 +12,7 @@ from strats.model import (
 from strats.monitor import StreamMonitor
 
 
-def _id(p: PricesData) -> PricesData:
+def _id(p: PricesData, _) -> PricesData:
     return p
 
 

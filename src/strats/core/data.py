@@ -59,7 +59,7 @@ class Data:
 
         # Source -> Data
         if self.source_to_data is not None:
-            new_data = self.source_to_data(new_source)
+            new_data = self.source_to_data(new_source, self._data)
         else:
             new_data = new_source
 

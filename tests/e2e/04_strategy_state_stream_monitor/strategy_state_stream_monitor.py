@@ -15,7 +15,7 @@ from strats.monitor import StreamMonitor
 logger = logging.getLogger(__name__)
 
 
-def _id(p: PricesData) -> PricesData:
+def _id(p: PricesData, _) -> PricesData:
     return p
 
 
