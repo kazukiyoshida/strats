@@ -60,18 +60,18 @@ class StreamMonitor(Monitor):
             if self.on_init is not None:
                 self.on_init()
 
-            async for data in self.client.stream():
+            async for source in self.client.stream():
                 if self.on_pre_event is not None:
-                    self.on_pre_event()
+                    self.on_pre_event(source)
 
                 if data_descriptor is not None:
                     try:
-                        data_descriptor.__set__(state, data)
+                        data_descriptor.__set__(state, source)
                     except Exception as e:
                         logger.error(f"failed to update state.{self.data_name}: {e}")
 
                 if self.on_post_event is not None:
-                    self.on_post_event(data)
+                    self.on_post_event(source)
 
         except asyncio.CancelledError:
             # To avoid "ERROR:asyncio:Task exception was never retrieved",
