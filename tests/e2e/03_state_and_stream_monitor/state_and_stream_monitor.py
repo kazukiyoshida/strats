@@ -17,7 +17,7 @@ def _id(p: PricesData) -> PricesData:
 
 
 class TestStreamClient(StreamClient):
-    def set_name(self, name: str):
+    def prepare(self, name: str):
         self.name = name
 
     async def stream(self) -> AsyncGenerator[PricesData]:
