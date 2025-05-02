@@ -5,6 +5,9 @@ from .state import State
 
 
 class Strategy(ABC):
+    def prepare(self, state: Optional[State]):
+        self.state = state
+
     @abstractmethod
-    async def run(self, state: Optional[State]):
+    async def run(self):
         pass

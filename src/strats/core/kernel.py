@@ -38,8 +38,9 @@ class Kernel:
         if self.strategy_task and not self.strategy_task.done():
             return
 
+        self.strategy.prepare(self.state)
         self.strategy_task = asyncio.create_task(
-            _handle_error(self.strategy.run)(self.state),
+            _handle_error(self.strategy.run)(),
             name="strategy",
         )
 

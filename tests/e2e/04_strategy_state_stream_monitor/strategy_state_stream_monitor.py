@@ -2,7 +2,6 @@ import asyncio
 import logging
 from collections.abc import AsyncGenerator
 from decimal import Decimal
-from typing import Optional
 
 from strats import Data, State, Strategy, Strats
 from strats.exchange import StreamClient
@@ -44,12 +43,9 @@ class TestState(State):
 
 
 class TestStrategy(Strategy):
-    async def run(self, state: Optional[State]):
-        if state is None:
-            raise ValueError("state is not found")
-
+    async def run(self):
         while True:
-            item = await state.queue.get()
+            item = await self.state.queue.get()
             logger.info(f"strategy > bid: {item.source.bid}")
 
 
