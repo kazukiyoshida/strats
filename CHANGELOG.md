@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.5
+
+Released 2025-05-02
+
+- Add monitor's name, again
+- Add `start_delay_seconds` in StreamMonitor
+- Add CronMonitor
+- Wrap Strategy and Monitors by global error handler
+- Define QueueMsg type and dedup them
+- Give state to Strategy as its member
+- Delete `source_class` from Data descriptor
+- Flush queue before Strategy starts
+- Add an argument `current_data` for `source_to_data` function
+
 ## 0.1.4
 
 Released 2025-04-15
