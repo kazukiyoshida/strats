@@ -7,7 +7,6 @@ class Data:
     def __init__(
         self,
         *,
-        source_class=None,
         data_class=None,
         metrics_class=None,
         source_to_data=None,
@@ -19,7 +18,6 @@ class Data:
         enqueue: bool = True,
     ):
         # Classes
-        self.source_class = source_class
         self.data_class = data_class
         self.metrics_class = metrics_class
 

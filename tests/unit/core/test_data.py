@@ -28,7 +28,6 @@ def test_data_update():
 
     class DummyState(State):
         num = Data(
-            source_class=DummySource,
             data_class=DummyData,
             metrics_class=DummyMetrics,
             source_to_data=dummy_source_to_data,
@@ -66,7 +65,6 @@ def test_data_lifecycle_hook():
 
     class DummyState(State):
         num = Data(
-            source_class=DummySource,
             data_class=DummyData,
             metrics_class=DummyMetrics,
             source_to_data=source_to_data,

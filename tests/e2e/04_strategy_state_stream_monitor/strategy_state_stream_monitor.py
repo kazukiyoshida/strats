@@ -34,7 +34,6 @@ class TestStreamClient(StreamClient):
 
 class TestState(State):
     prices = Data(
-        source_class=PricesData,
         data_class=PricesData,
         metrics_class=PricesMetrics,
         source_to_data=_id,
