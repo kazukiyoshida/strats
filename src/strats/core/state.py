@@ -24,6 +24,9 @@ class State:
             self.queue = asyncio.Queue()
             self._initialized = True
 
+    def flush_queue(self):
+        self.queue = asyncio.Queue()
+
     def run(self, stop_event: threading.Event):
         loop = asyncio.get_running_loop()
         self.sync_to_async_queue_thread = threading.Thread(
