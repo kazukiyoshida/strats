@@ -50,7 +50,7 @@ class TestStrategy(Strategy):
 
         while True:
             item = await state.queue.get()
-            logger.info(f"strategy > bid: {item[0].bid}")
+            logger.info(f"strategy > bid: {item.source.bid}")
 
 
 def main():
