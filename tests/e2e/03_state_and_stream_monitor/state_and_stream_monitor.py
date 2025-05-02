@@ -12,12 +12,12 @@ from strats.model import (
 from strats.monitor import StreamMonitor
 
 
-def _id(p: PricesData) -> PricesData:
+def _id(p: PricesData, _) -> PricesData:
     return p
 
 
 class TestStreamClient(StreamClient):
-    def set_name(self, name: str):
+    def prepare(self, name: str):
         self.name = name
 
     async def stream(self) -> AsyncGenerator[PricesData]:
@@ -31,7 +31,6 @@ class TestStreamClient(StreamClient):
 
 class TestState(State):
     prices = Data(
-        source_class=PricesData,
         data_class=PricesData,
         metrics_class=PricesMetrics,
         source_to_data=_id,

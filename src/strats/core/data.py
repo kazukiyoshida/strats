@@ -1,11 +1,12 @@
 from typing import Callable, Optional
 
+from .queue import QueueMsg
+
 
 class Data:
     def __init__(
         self,
         *,
-        source_class=None,
         data_class=None,
         metrics_class=None,
         source_to_data=None,
@@ -17,7 +18,6 @@ class Data:
         enqueue: bool = True,
     ):
         # Classes
-        self.source_class = source_class
         self.data_class = data_class
         self.metrics_class = metrics_class
 
@@ -59,7 +59,7 @@ class Data:
 
         # Source -> Data
         if self.source_to_data is not None:
-            new_data = self.source_to_data(new_source)
+            new_data = self.source_to_data(new_source, self._data)
         else:
             new_data = new_source
 
@@ -67,7 +67,12 @@ class Data:
         self._data = new_data
 
         if self.enqueue and hasattr(instance, "sync_queue"):
-            instance.sync_queue.put([new_source, new_data])
+            instance.sync_queue.put(
+                QueueMsg(
+                    source=new_source,
+                    data=new_data,
+                )
+            )
 
         # Update Metrics if needed
         if self.data_to_metrics is not None:

@@ -3,10 +3,15 @@ import logging
 import queue
 import threading
 
+from strats.util.lru_set import LRUSet
+
 logger = logging.getLogger(__name__)
 
 
 class State:
+    def __init__(self, dedup_cache_size=100):
+        self.lruset = LRUSet(capacity=dedup_cache_size)
+
     def set_queues(self):
         """
         set_queues initializes both synchronous and asynchronous queues.
@@ -18,6 +23,9 @@ class State:
             self.sync_queue = queue.Queue()
             self.queue = asyncio.Queue()
             self._initialized = True
+
+    def flush_queue(self):
+        self.queue = asyncio.Queue()
 
     def run(self, stop_event: threading.Event):
         loop = asyncio.get_running_loop()
@@ -42,6 +50,11 @@ class State:
 
             if item is None:
                 break  # the stop signal
+
+            # dedug filter
+            if self.lruset.contains(item):
+                continue
+            self.lruset.add(item)
 
             # When scheduling callbacks from another thread,
             # `call_soon_threadsafe` must be used, since `call_soon` is not thread-safe.

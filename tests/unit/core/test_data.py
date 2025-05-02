@@ -20,7 +20,7 @@ class DummyMetrics:
 
 
 def test_data_update():
-    def dummy_source_to_data(source: DummySource) -> DummyData:
+    def dummy_source_to_data(source: DummySource, _current_data: DummyData) -> DummyData:
         return DummyData(d=str(source.s))
 
     def dummy_data_to_metrics(data: DummyData, metrics: DummyMetrics):
@@ -28,7 +28,6 @@ def test_data_update():
 
     class DummyState(State):
         num = Data(
-            source_class=DummySource,
             data_class=DummyData,
             metrics_class=DummyMetrics,
             source_to_data=dummy_source_to_data,
@@ -60,13 +59,12 @@ def test_data_lifecycle_hook():
     on_post_event = lifecycle.on_post_event
 
     source_to_data = lifecycle.source_to_data
-    source_to_data.side_effect = lambda s: DummyData(d=str(s.s))
+    source_to_data.side_effect = lambda s, _: DummyData(d=str(s.s))
 
     data_to_metrics = lifecycle.data_to_metrics
 
     class DummyState(State):
         num = Data(
-            source_class=DummySource,
             data_class=DummyData,
             metrics_class=DummyMetrics,
             source_to_data=source_to_data,
@@ -90,7 +88,7 @@ def test_data_lifecycle_hook():
     assert lifecycle.mock_calls == [
         call.on_init(),
         call.on_pre_event(state, source),
-        call.source_to_data(source),
+        call.source_to_data(source, ANY),
         call.data_to_metrics(DummyData(d="123"), ANY),
         call.on_post_event(state, DummyData(d="123")),
         call.on_delete(state),

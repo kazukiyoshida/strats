@@ -2,7 +2,6 @@ import asyncio
 import logging
 from collections.abc import AsyncGenerator
 from decimal import Decimal
-from typing import Optional
 
 from strats import Data, State, Strategy, Strats
 from strats.exchange import StreamClient
@@ -16,12 +15,12 @@ from strats.monitor import StreamMonitor
 logger = logging.getLogger(__name__)
 
 
-def _id(p: PricesData) -> PricesData:
+def _id(p: PricesData, _) -> PricesData:
     return p
 
 
 class TestStreamClient(StreamClient):
-    def set_name(self, name: str):
+    def prepare(self, name: str):
         self.name = name
 
     async def stream(self) -> AsyncGenerator[PricesData]:
@@ -35,7 +34,6 @@ class TestStreamClient(StreamClient):
 
 class TestState(State):
     prices = Data(
-        source_class=PricesData,
         data_class=PricesData,
         metrics_class=PricesMetrics,
         source_to_data=_id,
@@ -44,13 +42,10 @@ class TestState(State):
 
 
 class TestStrategy(Strategy):
-    async def run(self, state: Optional[State]):
-        if state is None:
-            raise ValueError("state is not found")
-
+    async def run(self):
         while True:
-            item = await state.queue.get()
-            logger.info(f"strategy > bid: {item[0].bid}")
+            item = await self.state.queue.get()
+            logger.info(f"strategy > bid: {item.source.bid}")
 
 
 def main():
