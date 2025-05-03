@@ -4,13 +4,12 @@ from collections.abc import AsyncGenerator
 from decimal import Decimal
 
 from strats import Data, State, Strategy, Strats
-from strats.exchange import StreamClient
 from strats.model import (
     PricesData,
     PricesMetrics,
     prices_data_to_prices_metrics,
 )
-from strats.monitor import StreamMonitor
+from strats.monitor import StreamClient, StreamMonitor
 
 logger = logging.getLogger(__name__)
 
