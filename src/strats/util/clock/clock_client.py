@@ -37,7 +37,7 @@ class ClockClient(StreamClient):
 
     @property
     def ohlc_datetime(self):
-        return self.datetime().replace(second=0, microsecond=0)
+        return self.datetime.replace(second=0, microsecond=0)
 
     def prepare(self, name: str):
         self.name = name
@@ -60,6 +60,7 @@ class ClockClient(StreamClient):
                 text = data.decode().strip()
                 timestamp = datetime.strptime(text, self.mock_datetime_format)
                 self.mock_datetime = timestamp.replace(tzinfo=self.tz)
+                yield self.mock_datetime
 
         except asyncio.CancelledError:
             # Allow clean cancellation
