@@ -2,8 +2,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 
 from strats import Strats
-from strats.exchange import StreamClient
-from strats.monitor import StreamMonitor
+from strats.monitor import StreamClient, StreamMonitor
 
 
 class TestStreamClient(StreamClient):

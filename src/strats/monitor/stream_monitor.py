@@ -1,11 +1,21 @@
 import asyncio
 import logging
+from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
 from strats.core import Monitor, State
-from strats.exchange import StreamClient
 
 logger = logging.getLogger(__name__)
+
+
+class StreamClient(ABC):
+    @abstractmethod
+    def prepare(self, name: str):
+        pass
+
+    @abstractmethod
+    async def stream(self):
+        pass
 
 
 class StreamMonitor(Monitor):

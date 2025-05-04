@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from strats.util.lru_set import LRUSet
+from strats.internal.lru_set import LRUSet
 
 
 @dataclass(frozen=True)

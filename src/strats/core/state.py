@@ -3,7 +3,7 @@ import logging
 import queue
 import threading
 
-from strats.util.lru_set import LRUSet
+from strats.internal.lru_set import LRUSet
 
 logger = logging.getLogger(__name__)
 

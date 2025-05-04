@@ -5,7 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from strats.core.kernel import Kernel
-from strats.util.log_config import LOGGING_CONFIG
+from strats.internal.log_config import LOGGING_CONFIG
 
 from .router import get_kernel, router
 
