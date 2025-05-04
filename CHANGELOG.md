@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.6
+
+Released 2025-05-04
+
+- Rename util module to internal module
+- Re-create util module
+- Add Unix Domain Socket Clock server & client for backtest
+- Move exchange.StreamClient to monitor.StreamClient
+
 ## 0.1.5
 
 Released 2025-05-02
