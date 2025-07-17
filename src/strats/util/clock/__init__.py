@@ -1,2 +1,2 @@
-from .clock_client import ClockClient as ClockClient
-from .clock_server import clock_server as clock_server
+from .uds_clock_client import UDSClockClient as UDSClockClient
+from .uds_clock_server import uds_clock_server as uds_clock_server

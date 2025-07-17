@@ -1,3 +1,4 @@
+from .clock_monitor import ClockClient as ClockClient
 from .clock_monitor import ClockMonitor as ClockMonitor
 from .cron_monitor import CronMonitor as CronMonitor
 from .stream_monitor import StreamClient as StreamClient

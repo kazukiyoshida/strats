@@ -4,15 +4,15 @@ from datetime import datetime
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-from strats.monitor import StreamClient
+from strats.monitor import ClockClient
 
-from .clock_server import DATETIME_FORMAT, SOCKET_PATH
+from .uds_clock_server import DATETIME_FORMAT, SOCKET_PATH
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class ClockClient(StreamClient):
+class UDSClockClient(ClockClient):
     def __init__(
         self,
         tz: Optional[ZoneInfo] = None,

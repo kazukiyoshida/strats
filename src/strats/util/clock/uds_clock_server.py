@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def clock_server(
+def uds_clock_server(
     init_time: datetime,
     speed: int = 1,
     socket_path: str = SOCKET_PATH,
@@ -36,7 +36,7 @@ def clock_server(
                 conn.sendall(msg.encode() + b"\n")
                 logger.info(msg)
 
-                time.sleep(1 / speed)
+                time.sleep(1.0 / float(speed))
                 t += timedelta(seconds=1)
 
         except (BrokenPipeError, ConnectionResetError):

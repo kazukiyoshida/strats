@@ -1,10 +1,26 @@
 import asyncio
 import logging
+from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
 from strats.core import Monitor, State
 
 logger = logging.getLogger(__name__)
+
+
+class ClockClient(ABC):
+    @abstractmethod
+    def prepare(self, name: str):
+        pass
+
+    @abstractmethod
+    async def stream(self):
+        pass
+
+    @abstractmethod
+    @property
+    def datetime(self):
+        pass
 
 
 class ClockMonitor(Monitor):
@@ -13,7 +29,9 @@ class ClockMonitor(Monitor):
     def __init__(
         self,
         job: Callable,
-        interval_sec: int = 60,
+        clock_client: ClockClient,
+        interval_sec: float = 60.0,
+        polling_interval_sec: float = 0.05,
         monitor_name: Optional[str] = None,
         data_name: Optional[str] = None,
         on_init: Optional[Callable] = None,
@@ -21,7 +39,9 @@ class ClockMonitor(Monitor):
         start_delay_seconds: int = 0,
     ):
         self.job = job
+        self.clock_client = clock_client
         self.interval_sec = interval_sec
+        self.polling_interval_sec = polling_interval_sec
 
         if monitor_name is None:
             monitor_name = f"ClockMonitor{ClockMonitor._counter}"
@@ -50,9 +70,16 @@ class ClockMonitor(Monitor):
             if self.on_init is not None:
                 self.on_init()
 
+            last_timestamp = self.clock_client.datetime.timestamp()
+            await self.job(state)
+
             while True:
-                await self.job(state)
-                await asyncio.sleep(self.interval_sec)
+                await asyncio.sleep(self.polling_interval_sec)
+
+                current_timestamp = self.clock_client.datetime.timestamp()
+                if current_timestamp - last_timestamp >= self.interval_sec:
+                    last_timestamp = current_timestamp
+                    await self.job(state)
 
         except asyncio.CancelledError:
             # To avoid "ERROR:asyncio:Task exception was never retrieved",
