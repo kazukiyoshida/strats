@@ -1,15 +1,12 @@
-import asyncio
 from urllib.parse import urljoin
 
-import pytest
 import requests
 
 BASE_URL = "http://localhost:8000"
-APPLICATION_FILEPATH = "tests/e2e/02_stream_monitor/stream_monitor.py"
+APPLICATION_FILEPATH = "tests/e2e/e01_minimal/app.py"
 
 
-@pytest.mark.asyncio
-async def test_stream_monitor(app_process_factory):
+def test_minimal(app_process_factory):
     proc = app_process_factory(APPLICATION_FILEPATH)
 
     # >> healthz, metrics
@@ -41,41 +38,18 @@ async def test_stream_monitor(app_process_factory):
     # >> monitors
 
     res = requests.get(urljoin(BASE_URL, "/monitors"))
-    expect = {
-        "is_configured": True,
-        "monitors": {
-            "stream_monitor": {
-                "is_running": False,
-            },
-        },
-    }
+    expect = {"is_configured": False}
     assert res.status_code == 200
     assert res.json() == expect
 
     res = requests.post(urljoin(BASE_URL, "/monitors/start"))
-    expect = {
-        "is_configured": True,
-        "monitors": {
-            "stream_monitor": {
-                "is_running": True,
-            },
-        },
-    }
-    assert res.status_code == 200
+    expect = {"detail": "Missing monitors configuration"}
+    assert res.status_code == 400
     assert res.json() == expect
 
-    await asyncio.sleep(0.5)
-
     res = requests.post(urljoin(BASE_URL, "/monitors/stop"))
-    expect = {
-        "is_configured": True,
-        "monitors": {
-            "stream_monitor": {
-                "is_running": False,
-            },
-        },
-    }
-    assert res.status_code == 200
+    expect = {"detail": "Missing monitors configuration"}
+    assert res.status_code == 400
     assert res.json() == expect
 
     proc.terminate()

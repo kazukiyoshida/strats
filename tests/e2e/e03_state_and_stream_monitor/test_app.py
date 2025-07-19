@@ -6,7 +6,7 @@ import pytest
 import requests
 
 BASE_URL = "http://localhost:8000"
-APPLICATION_FILEPATH = "tests/e2e/03_state_and_stream_monitor/state_and_stream_monitor.py"
+APPLICATION_FILEPATH = "tests/e2e/e03_state_and_stream_monitor/app.py"
 
 
 @pytest.mark.asyncio

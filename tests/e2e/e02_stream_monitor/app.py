@@ -21,6 +21,7 @@ def main():
         data_name="prices",
         client=TestStreamClient(),
     )
+
     Strats(
         monitors=[stream_monitor],
     ).serve()
