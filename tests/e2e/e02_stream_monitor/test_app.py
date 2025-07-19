@@ -1,39 +1,17 @@
 import asyncio
-import subprocess
-import sys
-import time
 from urllib.parse import urljoin
 
 import pytest
 import requests
 
 BASE_URL = "http://localhost:8000"
-
-
-@pytest.fixture(scope="function")
-def app_process():
-    proc = subprocess.Popen(
-        ["python", "tests/e2e/02_stream_monitor/stream_monitor.py"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    # wait the application is running
-    time.sleep(0.5)
-
-    if proc.poll() is not None:
-        stdout, stderr = proc.communicate()
-        print("[STDOUT]", stdout.decode(), file=sys.stderr)
-        print("[STDERR]", stderr.decode(), file=sys.stderr)
-        raise RuntimeError("Application process exited early")
-
-    yield proc
-
-    proc.terminate()
-    proc.wait()
+APPLICATION_FILEPATH = "tests/e2e/e02_stream_monitor/app.py"
 
 
 @pytest.mark.asyncio
-async def test_stream_monitor(app_process):
+async def test_stream_monitor(app_process_factory):
+    proc = app_process_factory(APPLICATION_FILEPATH)
+
     # >> healthz, metrics
 
     res = requests.get(urljoin(BASE_URL, "/healthz"))
@@ -66,7 +44,7 @@ async def test_stream_monitor(app_process):
     expect = {
         "is_configured": True,
         "monitors": {
-            "stream_monitor": {
+            "StreamMonitor0": {
                 "is_running": False,
             },
         },
@@ -78,7 +56,7 @@ async def test_stream_monitor(app_process):
     expect = {
         "is_configured": True,
         "monitors": {
-            "stream_monitor": {
+            "StreamMonitor0": {
                 "is_running": True,
             },
         },
@@ -92,10 +70,13 @@ async def test_stream_monitor(app_process):
     expect = {
         "is_configured": True,
         "monitors": {
-            "stream_monitor": {
+            "StreamMonitor0": {
                 "is_running": False,
             },
         },
     }
     assert res.status_code == 200
     assert res.json() == expect
+
+    proc.terminate()
+    proc.wait()
