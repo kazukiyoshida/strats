@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.7
+
+Released 2025-07-19
+
+- Features
+  - Remove ClockMonitor and improve CronMonitor using croniter
+  - Refactor Monitors
+  - Embed clock in strats kernel and update API & CLI
+- Test
+  - Refactor E2E test using conftest.py
+  - Re-design E2E test directory, filename and function name
+- Misc
+  - Add CONTRIBUTING.md
+
 ## 0.1.6
 
 Released 2025-05-04
