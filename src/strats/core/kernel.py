@@ -77,7 +77,7 @@ class Kernel:
                 continue
 
             self.monitor_tasks[monitor.name] = asyncio.create_task(
-                _handle_error(monitor.run)(self.state),
+                _handle_error(monitor.run)(self.clock, self.state),
                 name=monitor.name,
             )
 
