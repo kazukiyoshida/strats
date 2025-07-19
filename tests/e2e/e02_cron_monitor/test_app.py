@@ -5,7 +5,7 @@ import pytest
 import requests
 
 BASE_URL = "http://localhost:8000"
-APPLICATION_FILEPATH = "tests/e2e/e02_stream_monitor/app.py"
+APPLICATION_FILEPATH = "tests/e2e/e02_cron_monitor/app.py"
 
 
 @pytest.mark.asyncio
@@ -45,7 +45,7 @@ async def test_app(app_process_factory):
         expect = {
             "is_configured": True,
             "monitors": {
-                "StreamMonitor_1": {
+                "CronMonitor_1": {
                     "is_running": False,
                 },
             },
@@ -57,7 +57,7 @@ async def test_app(app_process_factory):
         expect = {
             "is_configured": True,
             "monitors": {
-                "StreamMonitor_1": {
+                "CronMonitor_1": {
                     "is_running": True,
                 },
             },
@@ -71,7 +71,7 @@ async def test_app(app_process_factory):
         expect = {
             "is_configured": True,
             "monitors": {
-                "StreamMonitor_1": {
+                "CronMonitor_1": {
                     "is_running": False,
                 },
             },

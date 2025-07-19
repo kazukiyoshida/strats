@@ -1,80 +1,62 @@
 import asyncio
 import logging
+from datetime import datetime
 from typing import Callable, Optional
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
+from croniter import croniter
 
-from strats.core import Monitor, State
+from strats.core import Clock, Monitor, State
 
 logger = logging.getLogger(__name__)
 
 
 class CronMonitor(Monitor):
-    _counter = 0
-
     def __init__(
         self,
         cron_job: Callable,
         cron_schedule: str,
-        monitor_name: Optional[str] = None,
-        data_name: Optional[str] = None,
-        on_init: Optional[Callable] = None,
-        on_delete: Optional[Callable] = None,
-        start_delay_seconds: int = 0,
+        check_interval_sec: float = 0.5,
+        **kwargs,
     ):
         self.cron_job = cron_job
         self.cron_schedule = cron_schedule
+        self.check_interval_sec = check_interval_sec
 
-        if monitor_name is None:
-            monitor_name = f"CronMonitor{CronMonitor._counter}"
-            CronMonitor._counter += 1
-        self._monitor_name = monitor_name
+        super().__init__(**kwargs)
 
-        self.data_name = data_name
+    async def run(self, clock: Clock, state: Optional[State]):
+        await self.delay()
+        self.set_descriptor(state)
+        logger.info(f"{self.name} start")
 
-        # Lifecycle Hook
-        self.on_init = on_init
-        self.on_delete = on_delete
+        success = self.exec_on_init()
+        if not success:
+            return
 
-        self.start_delay_seconds = start_delay_seconds
-
-    @property
-    def name(self) -> str:
-        return self._monitor_name
-
-    async def run(self, state: Optional[State]):
-        if self.start_delay_seconds > 0:
-            await asyncio.sleep(self.start_delay_seconds)
-
-        self.scheduler = AsyncIOScheduler()
-        self.scheduler.add_job(
-            self.cron_job,
-            trigger=CronTrigger.from_crontab(self.cron_schedule),
-            args=[state],
-        )
-
+        schedule = croniter(self.cron_schedule, clock.datetime)
         try:
-            logger.info(f"{self.name} start")
-
-            if self.on_init is not None:
-                self.on_init()
-
-            self.scheduler.start()
-
+            next_time = schedule.get_next(datetime)
             while True:
-                await asyncio.sleep(3600)  # effectively "do nothing" for a long time
+                if clock.datetime >= next_time:
+                    # Exec job
+                    source = self.cron_job(clock, state)
+
+                    # Update state and lifecycle hooks
+                    self.exec_on_pre_event(source)
+                    self.update_data_descriptor(state, source)
+                    self.exec_on_post_event(source)
+
+                    # prepare next schedule
+                    next_time = schedule.get_next(datetime)
+                await asyncio.sleep(self.check_interval_sec)
 
         except asyncio.CancelledError:
             # To avoid "ERROR:asyncio:Task exception was never retrieved",
             # Re-raise the CancelledError
             raise
         except Exception as e:
-            logger.error(f"Unhandled exception in {self.name}: {e}")
+            # Unexpected error
+            logger.error(f"Error in {self.name}, but maybe in the `cron_job` function: {e}")
         finally:
-            if self.on_delete is not None:
-                self.on_delete()
-
-            self.scheduler.shutdown()
-
+            self.exec_on_delete()
             logger.info(f"{self.name} stopped")

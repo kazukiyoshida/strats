@@ -20,26 +20,23 @@ class Clock:
     ):
         self.tz = tz
         self.speed = speed
-        self.mock_datetime = None
+        self.is_mock = start_at is not None
 
-        if start_at is not None:
-            t = datetime.strptime(start_at, DATETIME_FORMAT)
+        if self.is_mock:
+            t = datetime.strptime(str(start_at), DATETIME_FORMAT)
             if tz:
                 t = t.replace(tzinfo=tz)
             self.mock_datetime = t
 
     @property
-    def is_mock(self):
-        return self.mock_datetime is not None
-
-    @property
     def datetime(self):
-        if not self.is_mock:
-            if self.tz:
-                return datetime.now(self.tz)
-            else:
-                return datetime.now()
-        return self.mock_datetime
+        if self.is_mock:
+            return self.mock_datetime
+
+        if self.tz:
+            return datetime.now(self.tz)
+        else:
+            return datetime.now()
 
     @property
     def ohlc_datetime(self):

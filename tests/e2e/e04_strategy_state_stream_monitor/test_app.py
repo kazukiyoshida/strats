@@ -13,94 +13,96 @@ APPLICATION_FILEPATH = "tests/e2e/e04_strategy_state_stream_monitor/app.py"
 
 
 @pytest.mark.asyncio
-async def test_state_and_stream_monitor(app_process_factory):
+async def test_app(app_process_factory):
     proc = app_process_factory(APPLICATION_FILEPATH)
 
-    # >> healthz, metrics
+    try:
+        # >> healthz, metrics
 
-    res = requests.get(urljoin(BASE_URL, "/healthz"))
-    assert res.status_code == 200
-    assert res.json() == "ok"
+        res = requests.get(urljoin(BASE_URL, "/healthz"))
+        assert res.status_code == 200
+        assert res.json() == "ok"
 
-    res = requests.get(urljoin(BASE_URL, "/metrics"))
-    assert res.status_code == 200
+        res = requests.get(urljoin(BASE_URL, "/metrics"))
+        assert res.status_code == 200
 
-    # >> strategy
+        # >> strategy
 
-    res = requests.get(urljoin(BASE_URL, "/strategy"))
-    expect = {"is_configured": True, "is_running": False}
-    assert res.status_code == 200
-    assert res.json() == expect
+        res = requests.get(urljoin(BASE_URL, "/strategy"))
+        expect = {"is_configured": True, "is_running": False}
+        assert res.status_code == 200
+        assert res.json() == expect
 
-    # >> monitors
+        # >> monitors
 
-    res = requests.get(urljoin(BASE_URL, "/monitors"))
-    expect = {
-        "is_configured": True,
-        "monitors": {
-            "StreamMonitor0": {
-                "is_running": False,
+        res = requests.get(urljoin(BASE_URL, "/monitors"))
+        expect = {
+            "is_configured": True,
+            "monitors": {
+                "StreamMonitor_1": {
+                    "is_running": False,
+                },
             },
-        },
-    }
-    assert res.status_code == 200
-    assert res.json() == expect
+        }
+        assert res.status_code == 200
+        assert res.json() == expect
 
-    # >> run
+        # >> run
 
-    res = requests.post(urljoin(BASE_URL, "/strategy/start"))
-    expect = {"is_configured": True, "is_running": True}
-    assert res.status_code == 200
-    assert res.json() == expect
+        res = requests.post(urljoin(BASE_URL, "/strategy/start"))
+        expect = {"is_configured": True, "is_running": True}
+        assert res.status_code == 200
+        assert res.json() == expect
 
-    res = requests.post(urljoin(BASE_URL, "/monitors/start"))
-    expect = {
-        "is_configured": True,
-        "monitors": {
-            "StreamMonitor0": {
-                "is_running": True,
+        res = requests.post(urljoin(BASE_URL, "/monitors/start"))
+        expect = {
+            "is_configured": True,
+            "monitors": {
+                "StreamMonitor_1": {
+                    "is_running": True,
+                },
             },
-        },
-    }
-    assert res.status_code == 200
-    assert res.json() == expect
+        }
+        assert res.status_code == 200
+        assert res.json() == expect
 
-    await asyncio.sleep(0.5)
+        await asyncio.sleep(0.5)
 
-    # >> check
+        # >> check
 
-    res = requests.get(urljoin(BASE_URL, "/metrics"))
-    assert res.status_code == 200
-    assert extract_unlabeled_metric_value(res.text, "prices_prices_bid") == 100.0
-    assert extract_unlabeled_metric_value(res.text, "prices_prices_ask") == 101.0
-    assert extract_unlabeled_metric_value(res.text, "prices_prices_spread") == 1.0
-    assert extract_unlabeled_metric_value(res.text, "prices_prices_update_count_total") == 1.0
+        res = requests.get(urljoin(BASE_URL, "/metrics"))
+        assert res.status_code == 200
+        assert extract_unlabeled_metric_value(res.text, "prices_prices_bid") == 100.0
+        assert extract_unlabeled_metric_value(res.text, "prices_prices_ask") == 101.0
+        assert extract_unlabeled_metric_value(res.text, "prices_prices_spread") == 1.0
+        assert extract_unlabeled_metric_value(res.text, "prices_prices_update_count_total") == 1.0
 
-    stderrs = get_stderr_list(proc)
-    # the last stdout is "GET /metrics HTTP/1.1 200 OK"
-    assert "INFO : __main__ : strategy > bid: 100" in stderrs[-2]
+        stderrs = get_stderr_list(proc)
+        # the last stdout is "GET /metrics HTTP/1.1 200 OK"
+        assert "INFO : __main__ : strategy > bid: 100" in stderrs[-2]
 
-    # >> stop
+        # >> stop
 
-    res = requests.post(urljoin(BASE_URL, "/monitors/stop"))
-    expect = {
-        "is_configured": True,
-        "monitors": {
-            "StreamMonitor0": {
-                "is_running": False,
+        res = requests.post(urljoin(BASE_URL, "/monitors/stop"))
+        expect = {
+            "is_configured": True,
+            "monitors": {
+                "StreamMonitor_1": {
+                    "is_running": False,
+                },
             },
-        },
-    }
-    assert res.status_code == 200
-    assert res.json() == expect
+        }
+        assert res.status_code == 200
+        assert res.json() == expect
 
-    res = requests.post(urljoin(BASE_URL, "/strategy/stop"))
-    expect = {"is_configured": True, "is_running": False}
-    assert res.status_code == 200
-    assert res.json() == expect
+        res = requests.post(urljoin(BASE_URL, "/strategy/stop"))
+        expect = {"is_configured": True, "is_running": False}
+        assert res.status_code == 200
+        assert res.json() == expect
 
-    proc.terminate()
-    proc.wait()
+    finally:
+        proc.terminate()
+        proc.wait()
 
 
 def extract_unlabeled_metric_value(body: str, metric_name: str) -> float:

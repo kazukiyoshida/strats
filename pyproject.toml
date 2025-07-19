@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "apscheduler>=3.11.0",
+    "croniter>=6.0.0",
     "fastapi>=0.115.11",
     "flask>=3.1.0",
     "httpx>=0.28.1",
@@ -101,5 +101,6 @@ deps =
     mypy
     types-waitress
     types-requests
+    types-croniter
 commands = mypy src tests --ignore-missing-imports
 """
