@@ -1,5 +1,8 @@
 import typer
 
+from strats import __version__
+
+from .clock import app as clock_app
 from .monitors import app as monitors_app
 from .strategy import app as strategy_app
 
@@ -10,3 +13,13 @@ app = typer.Typer(
 )
 app.add_typer(strategy_app, name="strategy")
 app.add_typer(monitors_app, name="monitors")
+app.add_typer(clock_app, name="clock")
+
+
+@app.command()
+def version():
+    print(f"strats version: {__version__}")
+
+
+if __name__ == "__main__":
+    app()

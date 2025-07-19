@@ -71,6 +71,29 @@ async def stop_monitors(kernel: Kernel = Depends(get_kernel)):
     return response_monitors_info(kernel)
 
 
+@router.get("/clock", tags=["clock"])
+def get_clock(kernel: Kernel = Depends(get_kernel)):
+    return response_clock_info(kernel)
+
+
+@router.post("/clock/start", tags=["clock"])
+async def start_clock(kernel: Kernel = Depends(get_kernel)):
+    try:
+        await kernel.start_clock()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return response_clock_info(kernel)
+
+
+@router.post("/clock/stop", tags=["clock"])
+async def stop_clock(kernel: Kernel = Depends(get_kernel)):
+    try:
+        await kernel.stop_clock()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return response_clock_info(kernel)
+
+
 def response_strategy_info(kernel):
     return {
         "is_configured": kernel.strategy is not None,
@@ -92,5 +115,18 @@ def response_monitors_info(kernel):
             }
             for monitor in kernel.monitors
         }
-
     return res
+
+
+def response_clock_info(kernel):
+    if kernel.clock.is_mock:
+        return {
+            "is_real": False,
+            "is_running": (kernel.clock_task is not None and not kernel.clock_task.done()),
+            "datetime": kernel.clock.datetime.isoformat(),
+        }
+    else:
+        return {
+            "is_real": True,
+            "datetime": kernel.clock.datetime.isoformat(),
+        }

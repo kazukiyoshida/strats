@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 import requests
 
 BASE_URL = "http://localhost:8000"
-APPLICATION_FILEPATH = "tests/e2e/e01_minimal/app.py"
+APPLICATION_FILEPATH = "tests/e2e/e01_minimal_clock/app.py"
 
 
 def test_minimal(app_process_factory):
@@ -55,18 +55,27 @@ def test_minimal(app_process_factory):
     # >> clock
 
     res = requests.get(urljoin(BASE_URL, "/clock"))
+    expect = {
+        "is_real": False,
+        "is_running": False,
+        "datetime": "2025-01-01T12:00:00+09:00",
+    }
     assert res.status_code == 200
-    assert res.json()["is_real"]
+    assert res.json() == expect
 
     res = requests.post(urljoin(BASE_URL, "/clock/start"))
-    expect = {"detail": "Clock is not mock"}
-    assert res.status_code == 400
+    expect = {
+        "is_real": False,
+        "is_running": True,
+        "datetime": "2025-01-01T12:00:00+09:00",
+    }
+    assert res.status_code == 200
     assert res.json() == expect
 
     res = requests.post(urljoin(BASE_URL, "/clock/stop"))
-    expect = {"detail": "Clock is not mock"}
-    assert res.status_code == 400
-    assert res.json() == expect
+    expect = {"detail": "Missing monitors configuration"}
+    assert res.status_code == 200
+    assert not res.json()["is_running"]
 
     proc.terminate()
     proc.wait()

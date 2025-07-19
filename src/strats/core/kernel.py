@@ -3,6 +3,7 @@ import logging
 import threading
 from typing import Optional
 
+from .clock import Clock
 from .monitor import Monitor
 from .state import State
 from .strategy import Strategy
@@ -17,6 +18,7 @@ class Kernel:
         state: Optional[State] = None,
         strategy: Optional[Strategy] = None,
         monitors: Optional[list[Monitor]] = None,
+        clock: Clock = Clock(),
     ):
         self.state = state
         self.state_stop_event = None
@@ -27,6 +29,9 @@ class Kernel:
 
         self.strategy = strategy
         self.strategy_task = None
+
+        self.clock = clock
+        self.clock_task = None
 
     async def start_strategy(self):
         if self.strategy is None:
@@ -93,6 +98,30 @@ class Kernel:
         if self.state is not None:
             self.state_stop_event.set()
             self.state.sync_to_async_queue_thread.join()
+
+    async def start_clock(self):
+        if not self.clock.is_mock:
+            raise ValueError("Clock is not mock")
+
+        if self.clock_task and not self.clock_task.done():
+            return
+
+        self.clock_task = asyncio.create_task(
+            _handle_error(self.clock.run)(),
+            name="clock",
+        )
+
+    async def stop_clock(self, timeout=5.0):
+        if not self.clock.is_mock:
+            raise ValueError("Clock is not mock")
+        if self.clock_task.done():
+            raise ValueError("Clock is already stopped")
+
+        self.clock_task.cancel()
+        try:
+            await self.clock_task
+        except asyncio.CancelledError:
+            pass
 
 
 def _handle_error(func):
