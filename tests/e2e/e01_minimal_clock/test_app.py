@@ -6,7 +6,7 @@ BASE_URL = "http://localhost:8000"
 APPLICATION_FILEPATH = "tests/e2e/e01_minimal_clock/app.py"
 
 
-def test_minimal(app_process_factory):
+def test_app(app_process_factory):
     proc = app_process_factory(APPLICATION_FILEPATH)
 
     try:

@@ -9,7 +9,7 @@ APPLICATION_FILEPATH = "tests/e2e/e02_stream_monitor_negative/app.py"
 
 
 @pytest.mark.asyncio
-async def test_stream_monitor(app_process_factory):
+async def test_app(app_process_factory):
     proc = app_process_factory(APPLICATION_FILEPATH)
 
     try:
