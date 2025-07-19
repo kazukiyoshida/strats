@@ -37,7 +37,7 @@ def show_status(res):
     data = res.json()
 
     if not data["is_configured"]:
-        print("strategy is not configured")
+        print("monitor is not configured")
         return
 
     for name, monitor in data["monitors"].items():
