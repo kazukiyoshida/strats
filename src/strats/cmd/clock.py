@@ -10,21 +10,21 @@ app = typer.Typer(no_args_is_help=True)
 
 @app.command()
 def show():
-    url = urljoin(DEFAULT_URL, "/monitors")
+    url = urljoin(DEFAULT_URL, "/clock")
     res = httpx.get(url)
     show_status(res)
 
 
 @app.command()
 def start():
-    url = urljoin(DEFAULT_URL, "/monitors/start")
+    url = urljoin(DEFAULT_URL, "/clock/start")
     res = httpx.post(url)
     show_status(res)
 
 
 @app.command()
 def stop():
-    url = urljoin(DEFAULT_URL, "/monitors/stop")
+    url = urljoin(DEFAULT_URL, "/clock/stop")
     res = httpx.post(url)
     show_status(res)
 
@@ -36,10 +36,7 @@ def show_status(res):
 
     data = res.json()
 
-    if not data["is_configured"]:
-        print("monitor is not configured")
-        return
-
-    for name, monitor in data["monitors"].items():
-        status = "RUNNING" if monitor["is_running"] else "STOPPED"
-        print(f"{name}: {status}")
+    print(f"current: {data['datetime']}")
+    print(f"is_real: {data['is_real']}")
+    if not data["is_real"]:
+        print(f"is_running: {data['is_running']}")
