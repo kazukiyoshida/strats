@@ -35,6 +35,7 @@ class StreamMonitor(Monitor):
 
         self._name = name
         self.client = client
+        self.client_name = client.__class__.__name__
         self.data_name = data_name
         self.start_delay_seconds = start_delay_seconds
 
@@ -56,33 +57,47 @@ class StreamMonitor(Monitor):
             logger.info(f"{self.name} start")
 
             data_descriptor = None
-            if state is not None and self.data_name:
-                if self.data_name in type(state).__dict__:
-                    data_descriptor = type(state).__dict__[self.data_name]
-                else:
-                    raise ValueError(f"data_name: `{self.data_name}` is not found in State")
 
-            if self.on_init is not None:
-                self.on_init()
+            # Error handling for Initialization
+            try:
+                if state is not None and self.data_name:
+                    if self.data_name in type(state).__dict__:
+                        data_descriptor = type(state).__dict__[self.data_name]
+                    else:
+                        raise ValueError(f"data_name: `{self.data_name}` is not found in State")
 
-            async for source in self.client.stream():
-                if self.on_pre_event is not None:
-                    self.on_pre_event(source)
+                if self.on_init is not None:
+                    self.on_init()
+            except Exception as e:
+                logger.error(f"Initialization error in {self.name}: {e}")
+                return
 
-                if data_descriptor is not None:
-                    try:
-                        data_descriptor.__set__(state, source)
-                    except Exception as e:
-                        logger.error(f"failed to update state.{self.data_name}: {e}")
+            # Error handling for stream data handling
+            try:
+                async for source in self.client.stream():
+                    if self.on_pre_event is not None:
+                        self.on_pre_event(source)
 
-                if self.on_post_event is not None:
-                    self.on_post_event(source)
+                    if data_descriptor is not None:
+                        try:
+                            data_descriptor.__set__(state, source)
+                        except Exception as e:
+                            logger.error(f"failed to update state.{self.data_name}: {e}")
+
+                    if self.on_post_event is not None:
+                        self.on_post_event(source)
+            except Exception as e:
+                logger.error(
+                    f"Stream error in {self.name}, but maybe in the `stream` function"
+                    f" in {self.client_name}: {e}"
+                )
 
         except asyncio.CancelledError:
             # To avoid "ERROR:asyncio:Task exception was never retrieved",
             # Re-raise the CancelledError
             raise
         except Exception as e:
+            # Unexpected error
             logger.error(f"Unhandled exception in {self.name}: {e}")
         finally:
             if self.on_delete is not None:
