@@ -13,12 +13,8 @@ class SampleStreamClient(StreamClient):
 
 
 def main():
-    stream_monitor = StreamMonitor(
-        client=SampleStreamClient(),
-    )
-    Strats(
-        monitors=[stream_monitor],
-    ).serve()
+    stream_monitor = StreamMonitor(client=SampleStreamClient())
+    Strats(monitors=[stream_monitor]).serve()
 
 
 if __name__ == "__main__":
