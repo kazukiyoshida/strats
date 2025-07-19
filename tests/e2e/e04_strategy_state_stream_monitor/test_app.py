@@ -38,7 +38,7 @@ async def test_state_and_stream_monitor(app_process_factory):
     expect = {
         "is_configured": True,
         "monitors": {
-            "stream_monitor": {
+            "StreamMonitor0": {
                 "is_running": False,
             },
         },
@@ -57,7 +57,7 @@ async def test_state_and_stream_monitor(app_process_factory):
     expect = {
         "is_configured": True,
         "monitors": {
-            "stream_monitor": {
+            "StreamMonitor0": {
                 "is_running": True,
             },
         },
@@ -86,7 +86,7 @@ async def test_state_and_stream_monitor(app_process_factory):
     expect = {
         "is_configured": True,
         "monitors": {
-            "stream_monitor": {
+            "StreamMonitor0": {
                 "is_running": False,
             },
         },

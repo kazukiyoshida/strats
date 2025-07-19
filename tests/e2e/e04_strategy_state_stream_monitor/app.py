@@ -18,10 +18,16 @@ def _id(p: PricesData, _) -> PricesData:
     return p
 
 
-class TestStreamClient(StreamClient):
-    def prepare(self, name: str):
-        self.name = name
+class SampleState(State):
+    prices = Data(
+        data_class=PricesData,
+        metrics_class=PricesMetrics,
+        source_to_data=_id,
+        data_to_metrics=prices_data_to_prices_metrics,
+    )
 
+
+class SampleStreamClient(StreamClient):
     async def stream(self) -> AsyncGenerator[PricesData]:
         for i in range(100):
             yield PricesData(
@@ -31,16 +37,7 @@ class TestStreamClient(StreamClient):
             await asyncio.sleep(5)
 
 
-class TestState(State):
-    prices = Data(
-        data_class=PricesData,
-        metrics_class=PricesMetrics,
-        source_to_data=_id,
-        data_to_metrics=prices_data_to_prices_metrics,
-    )
-
-
-class TestStrategy(Strategy):
+class SampleStrategy(Strategy):
     async def run(self):
         while True:
             item = await self.state.queue.get()
@@ -48,17 +45,15 @@ class TestStrategy(Strategy):
 
 
 def main():
-    stream_monitor = StreamMonitor(
-        monitor_name="stream_monitor",
-        data_name="prices",
-        client=TestStreamClient(),
-    )
-    state = TestState()
-    strategy = TestStrategy()
     Strats(
-        state=state,
-        strategy=strategy,
-        monitors=[stream_monitor],
+        state=SampleState(),
+        strategy=SampleStrategy(),
+        monitors=[
+            StreamMonitor(
+                data_name="prices",
+                client=SampleStreamClient(),
+            ),
+        ],
     ).serve()
 
 
