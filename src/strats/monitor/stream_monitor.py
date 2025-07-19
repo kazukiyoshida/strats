@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import Optional
 
 from strats.core import Monitor, State
 
@@ -15,39 +15,15 @@ class StreamClient(ABC):
 
 
 class StreamMonitor(Monitor):
-    _counter = 0
-
     def __init__(
         self,
         client: StreamClient,
-        name: Optional[str] = None,
-        data_name: Optional[str] = None,
-        start_delay_seconds: int = 0,
-        # Lifecycle Hook
-        on_init: Optional[Callable] = None,
-        on_delete: Optional[Callable] = None,
-        on_pre_event: Optional[Callable] = None,
-        on_post_event: Optional[Callable] = None,
+        **kwargs,
     ):
-        if name is None:
-            name = f"StreamMonitor{StreamMonitor._counter}"
-            StreamMonitor._counter += 1
-
-        self._name = name
         self.client = client
         self.client_name = client.__class__.__name__
-        self.data_name = data_name
-        self.start_delay_seconds = start_delay_seconds
 
-        # Lifecycle Hook
-        self.on_init = on_init
-        self.on_delete = on_delete
-        self.on_pre_event = on_pre_event
-        self.on_post_event = on_post_event
-
-    @property
-    def name(self) -> str:
-        return self._name
+        super().__init__(**kwargs)
 
     async def run(self, state: Optional[State]):
         if self.start_delay_seconds > 0:
