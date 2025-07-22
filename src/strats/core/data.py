@@ -1,6 +1,11 @@
-from typing import Callable, Optional
+from dataclasses import dataclass
+from typing import Any, Callable, Optional
 
-from .queue import QueueMsg
+
+@dataclass
+class QueueMsg:
+    source: Optional[Any] = None
+    data: Optional[Any] = None
 
 
 class Data:
