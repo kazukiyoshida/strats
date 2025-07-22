@@ -38,9 +38,9 @@ class SampleStreamClient(StreamClient):
 
 
 class SampleStrategy(Strategy):
-    async def run(self):
+    async def run(self, clock, state):
         while True:
-            item = await self.state.queue.get()
+            item = await state.queue.get()
             logger.info(f"strategy > bid: {item.source.bid}")
 
 

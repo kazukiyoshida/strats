@@ -43,9 +43,12 @@ class Kernel:
         if self.strategy_task and not self.strategy_task.done():
             return
 
-        self.strategy.prepare(self.state)
+        # Since only Strategy reads from the queue, the queue is prepared in start_strategy.
+        if self.state is not None:
+            self.state.flush_queue()
+
         self.strategy_task = asyncio.create_task(
-            _handle_error(self.strategy.run)(),
+            _handle_error(self.strategy.run)(self.clock, self.state),
             name="strategy",
         )
 
