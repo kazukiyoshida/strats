@@ -14,15 +14,10 @@ from strats.monitor import StreamClient, StreamMonitor
 logger = logging.getLogger(__name__)
 
 
-def _id(p: PricesData, _) -> PricesData:
-    return p
-
-
 class SampleState(State):
     prices = Data(
         data_class=PricesData,
         metrics_class=PricesMetrics,
-        source_to_data=_id,
         data_to_metrics=prices_data_to_prices_metrics,
     )
 
