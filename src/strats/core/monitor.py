@@ -29,7 +29,7 @@ class Monitor(ABC):
         type(self)._counter += 1
 
         # Initialize common attributes
-        self._name = name or f"{type(self).__name__}_{type(self)._counter}"
+        self.name = name or f"{type(self).__name__}_{type(self)._counter}"
         self.data_name = data_name
         self.start_delay_seconds = start_delay_seconds
 
@@ -38,10 +38,6 @@ class Monitor(ABC):
         self.on_delete = on_delete
         self.on_pre_event = on_pre_event
         self.on_post_event = on_post_event
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @abstractmethod
     async def run(self, clock: Clock, state: Optional[State]):

@@ -70,10 +70,10 @@ async def test_app(app_process_factory):
 
         res = requests.get(urljoin(BASE_URL, "/metrics"))
         assert res.status_code == 200
-        assert extract_unlabeled_metric_value(res.text, "prices_prices_bid") == 100.0
-        assert extract_unlabeled_metric_value(res.text, "prices_prices_ask") == 101.0
-        assert extract_unlabeled_metric_value(res.text, "prices_prices_spread") == 1.0
-        assert extract_unlabeled_metric_value(res.text, "prices_prices_update_count_total") == 1.0
+        assert extract_unlabeled_metric_value(res.text, "prices_bid") == 100.0
+        assert extract_unlabeled_metric_value(res.text, "prices_ask") == 101.0
+        assert extract_unlabeled_metric_value(res.text, "prices_spread") == 1.0
+        assert extract_unlabeled_metric_value(res.text, "prices_update_count_total") == 1.0
 
         res = requests.post(urljoin(BASE_URL, "/monitors/stop"))
         expect = {

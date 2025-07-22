@@ -14,15 +14,10 @@ from strats.monitor import StreamClient, StreamMonitor
 logger = logging.getLogger(__name__)
 
 
-def _id(p: PricesData, _) -> PricesData:
-    return p
-
-
 class SampleState(State):
     prices = Data(
-        data_class=PricesData,
-        metrics_class=PricesMetrics,
-        source_to_data=_id,
+        data=PricesData(),
+        metrics=PricesMetrics(),
         data_to_metrics=prices_data_to_prices_metrics,
     )
 
@@ -38,9 +33,9 @@ class SampleStreamClient(StreamClient):
 
 
 class SampleStrategy(Strategy):
-    async def run(self):
+    async def run(self, clock, state):
         while True:
-            item = await self.state.queue.get()
+            item = await state.queue.get()
             logger.info(f"strategy > bid: {item.source.bid}")
 
 

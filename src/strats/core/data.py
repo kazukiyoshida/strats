@@ -1,14 +1,19 @@
-from typing import Callable, Optional
+from dataclasses import dataclass
+from typing import Any, Callable, Optional
 
-from .queue import QueueMsg
+
+@dataclass
+class QueueMsg:
+    source: Optional[Any] = None
+    data: Optional[Any] = None
 
 
 class Data:
     def __init__(
         self,
         *,
-        data_class=None,
-        metrics_class=None,
+        data=None,
+        metrics=None,
         source_to_data=None,
         data_to_metrics=None,
         on_init: Optional[Callable] = None,
@@ -17,9 +22,11 @@ class Data:
         on_post_event: Optional[Callable] = None,
         enqueue: bool = True,
     ):
-        # Classes
-        self.data_class = data_class
-        self.metrics_class = metrics_class
+        # Data and Metrics
+        self.initial_data = data
+        self.initial_metrics = metrics
+        self._data = data
+        self._metrics = metrics
 
         # ETL
         self.source_to_data = source_to_data
@@ -39,10 +46,6 @@ class Data:
 
     def __set_name__(self, owner, name):
         self._data_name = name
-
-        # Initialize the actual instances inside the descriptor
-        self._data = self.data_class()
-        self._metrics = self.metrics_class(name)
 
         if self.on_init is not None:
             self.on_init()
@@ -87,5 +90,5 @@ class Data:
             self.on_delete(instance)
 
         # Reset data and metrics
-        self._data = self.data_class()
-        self._metrics = self.metrics_class()
+        self._data = self.initial_data
+        self._metrics = self.initial_metrics  # FIXME: metrics is not reset
