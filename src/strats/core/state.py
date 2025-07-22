@@ -18,6 +18,10 @@ class State:
 
         To avoid attaching them to the default event loop,
         this function must be called after the FastAPI server has started.
+
+        The State class has embedded queue and sync_queue. These serve as pipes
+        connecting Data, State, and external components. The reason why State
+        (rather than Kernel) holds these queues is that Data can only access State.
         """
         if not hasattr(self, "_initialized"):
             self.sync_queue = queue.Queue()
