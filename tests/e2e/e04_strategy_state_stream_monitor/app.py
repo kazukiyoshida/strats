@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 class SampleState(State):
     prices = Data(
-        data_class=PricesData,
-        metrics_class=PricesMetrics,
+        data=PricesData(),
+        metrics=PricesMetrics(),
         data_to_metrics=prices_data_to_prices_metrics,
     )
 
