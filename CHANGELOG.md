@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.8
+
+Released 2025-07-22
+
+- Refactoring
+  - Remove prepare method in Strategy, and pass State as an argument
+  - Fix the name handling in Monitor class
+  - Give initial Data instance, not Data class
+  - Remove unnecessary id function for `source_to_data` in E2E tests
+
 ## 0.1.7
 
 Released 2025-07-19
