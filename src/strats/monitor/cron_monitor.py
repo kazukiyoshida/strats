@@ -39,7 +39,7 @@ class CronMonitor(Monitor):
             while True:
                 if clock.datetime >= next_time:
                     # Exec job
-                    source = self.cron_job(clock, state)
+                    source = await self.cron_job(clock, state)
 
                     # Update state and lifecycle hooks
                     self.exec_on_pre_event(source)

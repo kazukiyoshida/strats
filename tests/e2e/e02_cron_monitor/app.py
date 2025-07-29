@@ -4,7 +4,7 @@ from strats import Clock, Strats
 from strats.monitor import CronMonitor
 
 
-def cron_job(clock, state):
+async def cron_job(clock, state):
     print("job: ", clock.datetime)
 
 
