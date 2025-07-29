@@ -1,3 +1,5 @@
+import logging
+
 LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -31,3 +33,8 @@ LOGGING_CONFIG = {
         },
     },
 }
+
+
+class MetricsFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "/metrics" not in record.getMessage()
