@@ -55,10 +55,12 @@ class State:
             if item is None:
                 break  # the stop signal
 
-            # dedug filter
-            if self.lruset.contains(item):
-                continue
-            self.lruset.add(item)
+            # dedup filter
+            if item.dedup:
+                if self.lruset.contains(item):
+                    continue
+                else:
+                    self.lruset.add(item)
 
             # When scheduling callbacks from another thread,
             # `call_soon_threadsafe` must be used, since `call_soon` is not thread-safe.

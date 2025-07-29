@@ -6,6 +6,7 @@ from typing import Any, Callable, Optional
 class QueueMsg:
     source: Optional[Any] = None
     data: Optional[Any] = None
+    dedup: bool = True
 
 
 class Data:
@@ -21,6 +22,7 @@ class Data:
         on_pre_event: Optional[Callable] = None,
         on_post_event: Optional[Callable] = None,
         enqueue: bool = True,
+        dedup: bool = True,
     ):
         # Data and Metrics
         self.initial_data = data
@@ -40,6 +42,7 @@ class Data:
 
         # Queue settings
         self.enqueue = enqueue
+        self.dedup = dedup
 
         # Descriptor instance name
         self._data_name = None
@@ -74,6 +77,7 @@ class Data:
                 QueueMsg(
                     source=new_source,
                     data=new_data,
+                    dedup=self.dedup,
                 )
             )
 

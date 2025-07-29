@@ -95,10 +95,16 @@ async def stop_clock(kernel: Kernel = Depends(get_kernel)):
 
 
 def response_strategy_info(kernel):
-    return {
+    is_running = kernel.strategy_task is not None and not kernel.strategy_task.done()
+    resp = {
         "is_configured": kernel.strategy is not None,
-        "is_running": (kernel.strategy_task is not None and not kernel.strategy_task.done()),
+        "is_running": is_running,
     }
+    if is_running:
+        resp["started_at"] = kernel.strategy_started_at
+        if "__str__" in type(kernel.strategy).__dict__:
+            resp["details"] = str(kernel.strategy)
+    return resp
 
 
 def response_monitors_info(kernel):
@@ -106,15 +112,18 @@ def response_monitors_info(kernel):
         "is_configured": kernel.monitors is not None,
     }
     if kernel.monitors is not None:
-        res["monitors"] = {
-            monitor.name: {
-                "is_running": (
-                    monitor.name in kernel.monitor_tasks
-                    and not kernel.monitor_tasks[monitor.name].done()
-                )
+        res["monitors"] = {}
+        for monitor in kernel.monitors:
+            is_running = (
+                monitor.name in kernel.monitor_tasks
+                and not kernel.monitor_tasks[monitor.name].done()
+            )
+            details = {
+                "is_running": is_running,
             }
-            for monitor in kernel.monitors
-        }
+            if monitor.name in kernel.monitor_started_ats:
+                details["started_at"] = kernel.monitor_started_ats[monitor.name]
+            res["monitors"][monitor.name] = details
     return res
 
 

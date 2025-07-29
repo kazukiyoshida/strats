@@ -42,3 +42,8 @@ def show_status(res):
 
     status = "RUNNING" if data["is_running"] else "STOPPED"
     print(f"strategy: {status}")
+
+    if status == "RUNNING":
+        print(f"started_at: {data['started_at']}")
+        if "details" in data:
+            print(f"details: {data['details']}")

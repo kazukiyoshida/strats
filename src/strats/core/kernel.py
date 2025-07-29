@@ -26,9 +26,11 @@ class Kernel:
         # There is no event loop yet, so don't create an `asyncio.Event`.
         self.monitors = monitors
         self.monitor_tasks: dict[str, asyncio.Task] = {}
+        self.monitor_started_ats: dict[str, asyncio.Task] = {}
 
         self.strategy = strategy
         self.strategy_task = None
+        self.strategy_started_at = None
 
         self.clock = clock
         self.clock_task = None
@@ -51,6 +53,7 @@ class Kernel:
             _handle_error(self.strategy.run)(self.clock, self.state),
             name="strategy",
         )
+        self.strategy_started_at = self.clock.datetime
 
     async def stop_strategy(self, timeout=5.0):
         if self.strategy is None:
@@ -58,6 +61,11 @@ class Kernel:
         if self.strategy_task.done():
             raise ValueError("Strategy is already stopped")
 
+        if "__str__" in type(self.strategy).__dict__:
+            logger.info("stop strategy")
+            logger.info(f"strategy details: {self.strategy}")
+
+        self.strategy_started_at = None
         self.strategy_task.cancel()
         try:
             await self.strategy_task
@@ -83,10 +91,13 @@ class Kernel:
                 _handle_error(monitor.run)(self.clock, self.state),
                 name=monitor.name,
             )
+            self.monitor_started_ats[monitor.name] = self.clock.datetime
 
     async def stop_monitors(self, timeout=5.0):
         if self.monitors is None:
             raise ValueError("Missing monitors configuration")
+
+        self.monitor_started_ats = {}
 
         for task in self.monitor_tasks.values():
             if not task.done():
