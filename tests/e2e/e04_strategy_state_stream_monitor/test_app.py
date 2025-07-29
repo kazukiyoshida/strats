@@ -52,7 +52,9 @@ async def test_app(app_process_factory):
         res = requests.post(urljoin(BASE_URL, "/strategy/start"))
         expect = {"is_configured": True, "is_running": True}
         assert res.status_code == 200
-        assert res.json() == expect
+        resjson = res.json()
+        del resjson["started_at"]  # remove time
+        assert resjson == expect
 
         res = requests.post(urljoin(BASE_URL, "/monitors/start"))
         expect = {
@@ -64,7 +66,9 @@ async def test_app(app_process_factory):
             },
         }
         assert res.status_code == 200
-        assert res.json() == expect
+        resjson = res.json()
+        del resjson["monitors"]["StreamMonitor_1"]["started_at"]  # remove time
+        assert resjson == expect
 
         await asyncio.sleep(0.5)
 
@@ -78,8 +82,7 @@ async def test_app(app_process_factory):
         assert extract_unlabeled_metric_value(res.text, "prices_update_count_total") == 1.0
 
         stderrs = get_stderr_list(proc)
-        # the last stdout is "GET /metrics HTTP/1.1 200 OK"
-        assert "INFO : __main__ : strategy > bid: 100" in stderrs[-2]
+        assert "INFO : __main__ : strategy > bid: 100" in stderrs[-1]
 
         # >> stop
 

@@ -59,6 +59,7 @@ async def test_app(app_process_factory):
             "monitors": {
                 "CronMonitor_1": {
                     "is_running": True,
+                    "started_at": "2025-01-01T12:04:50+09:00",
                 },
             },
         }

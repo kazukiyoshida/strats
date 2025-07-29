@@ -64,7 +64,9 @@ async def test_app(app_process_factory):
             },
         }
         assert res.status_code == 200
-        assert res.json() == expect
+        resjson = res.json()
+        del resjson["monitors"]["StreamMonitor_1"]["started_at"]  # remove time
+        assert resjson == expect
 
         await asyncio.sleep(0.5)
 
