@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.9
+
+Released 2025-08-04
+
+- Feat
+  - Make dedup-check configurable
+  - add `started_at` and `details` for Strategy and Monitor
+- Refactoring
+  - Silence access log to `/metrics`
+  - make `cron_job` function asyncronous
+
 ## 0.1.8
 
 Released 2025-07-22
