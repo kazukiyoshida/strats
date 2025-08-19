@@ -89,7 +89,7 @@ deps =
     pytest-asyncio
     requests
 commands =
-    pytest tests -sv
+    pytest tests -svv
 
 [testenv:lint]
 deps = ruff
