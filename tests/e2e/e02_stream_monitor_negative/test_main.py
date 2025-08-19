@@ -1,47 +1,41 @@
 import asyncio
-from urllib.parse import urljoin
 
 import pytest
-import requests
+from httpx import ASGITransport, AsyncClient
 
-BASE_URL = "http://localhost:8000"
-APPLICATION_FILEPATH = "tests/e2e/e02_stream_monitor_negative/app.py"
+from .main import create_app
 
 
 @pytest.mark.asyncio
-async def test_app(app_process_factory):
-    proc = app_process_factory(APPLICATION_FILEPATH)
-
-    try:
+async def test_02_stream_monitor_negative():
+    app = create_app()
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # >> healthz, metrics
-
-        res = requests.get(urljoin(BASE_URL, "/healthz"))
+        res = await client.get("/healthz")
         assert res.status_code == 200
         assert res.json() == "ok"
 
-        res = requests.get(urljoin(BASE_URL, "/metrics"))
+        res = await client.get("/metrics")
         assert res.status_code == 200
 
         # >> strategy
-
-        res = requests.get(urljoin(BASE_URL, "/strategy"))
+        res = await client.get("/strategy")
         expect = {"is_configured": False, "is_running": False}
         assert res.status_code == 200
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/strategy/start"))
+        res = await client.post("/strategy/start")
         expect = {"detail": "Missing strategy configuration"}
         assert res.status_code == 400
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/strategy/stop"))
+        res = await client.post("/strategy/stop")
         expect = {"detail": "Missing strategy configuration"}
         assert res.status_code == 400
         assert res.json() == expect
 
         # >> monitors
-
-        res = requests.get(urljoin(BASE_URL, "/monitors"))
+        res = await client.get("/monitors")
         expect = {
             "is_configured": True,
             "monitors": {
@@ -53,7 +47,7 @@ async def test_app(app_process_factory):
         assert res.status_code == 200
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/monitors/start"))
+        res = await client.post("/monitors/start")
         expect = {
             "is_configured": True,
             "monitors": {
@@ -64,14 +58,15 @@ async def test_app(app_process_factory):
         }
         assert res.status_code == 200
         resjson = res.json()
-        del resjson["monitors"]["StreamMonitor_1"]["started_at"]  # remove time
+        # started_at は可変のため比較から除外
+        resjson["monitors"]["StreamMonitor_1"].pop("started_at", None)
         assert resjson == expect
 
+        # 直後にエラーが発生して自動停止する想定なので少し待つ
         await asyncio.sleep(0.5)
 
-        # As soon as the monitor starts, an error occurs and it automatically
-        # transitions to the STOPPED state
-        res = requests.get(urljoin(BASE_URL, "/monitors"))
+        # 自動で STOPPED に遷移しているはず
+        res = await client.get("/monitors")
         expect = {
             "is_configured": True,
             "monitors": {
@@ -82,22 +77,10 @@ async def test_app(app_process_factory):
         }
         assert res.status_code == 200
         resjson = res.json()
-        del resjson["monitors"]["StreamMonitor_1"]["started_at"]  # remove time
+        resjson["monitors"]["StreamMonitor_1"].pop("started_at", None)
         assert resjson == expect
 
-        # If you run stop on a monitor that is already in the STOPPED state, it still succeeds.
-        res = requests.post(urljoin(BASE_URL, "/monitors/stop"))
-        expect = {
-            "is_configured": True,
-            "monitors": {
-                "StreamMonitor_1": {
-                    "is_running": False,
-                },
-            },
-        }
+        # STOPPED 状態に対して stop を実行しても 200 で同じ状態のはず
+        res = await client.post("/monitors/stop")
         assert res.status_code == 200
         assert res.json() == expect
-
-    finally:
-        proc.terminate()
-        proc.wait()

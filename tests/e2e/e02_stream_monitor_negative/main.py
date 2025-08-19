@@ -10,15 +10,11 @@ class SampleStreamClient(StreamClient):
         yield 1
 
 
-def main():
-    Strats(
+def create_app():
+    return Strats(
         monitors=[
             StreamMonitor(
                 client=SampleStreamClient(),
             )
         ],
-    ).serve()
-
-
-if __name__ == "__main__":
-    main()
+    ).create_app()

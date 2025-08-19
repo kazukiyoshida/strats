@@ -1,61 +1,55 @@
-from urllib.parse import urljoin
+import pytest
+from httpx import ASGITransport, AsyncClient
 
-import requests
-
-BASE_URL = "http://localhost:8000"
-APPLICATION_FILEPATH = "tests/e2e/e01_minimal_clock/app.py"
+from .main import create_app
 
 
-def test_app(app_process_factory):
-    proc = app_process_factory(APPLICATION_FILEPATH)
-
-    try:
+@pytest.mark.asyncio
+async def test_01_minimal_clock():
+    app = create_app()
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # >> healthz, metrics
-
-        res = requests.get(urljoin(BASE_URL, "/healthz"))
+        res = await client.get("/healthz")
         assert res.status_code == 200
         assert res.json() == "ok"
 
-        res = requests.get(urljoin(BASE_URL, "/metrics"))
+        res = await client.get("/metrics")
         assert res.status_code == 200
 
         # >> strategy
-
-        res = requests.get(urljoin(BASE_URL, "/strategy"))
+        res = await client.get("/strategy")
         expect = {"is_configured": False, "is_running": False}
         assert res.status_code == 200
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/strategy/start"))
+        res = await client.post("/strategy/start")
         expect = {"detail": "Missing strategy configuration"}
         assert res.status_code == 400
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/strategy/stop"))
+        res = await client.post("/strategy/stop")
         expect = {"detail": "Missing strategy configuration"}
         assert res.status_code == 400
         assert res.json() == expect
 
         # >> monitors
-
-        res = requests.get(urljoin(BASE_URL, "/monitors"))
+        res = await client.get("/monitors")
         expect = {"is_configured": False}
         assert res.status_code == 200
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/monitors/start"))
+        res = await client.post("/monitors/start")
         expect = {"detail": "Missing monitors configuration"}
         assert res.status_code == 400
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/monitors/stop"))
+        res = await client.post("/monitors/stop")
         expect = {"detail": "Missing monitors configuration"}
         assert res.status_code == 400
         assert res.json() == expect
 
         # >> clock
-
-        res = requests.get(urljoin(BASE_URL, "/clock"))
+        res = await client.get("/clock")
         expect = {
             "is_real": False,
             "is_running": False,
@@ -64,7 +58,7 @@ def test_app(app_process_factory):
         assert res.status_code == 200
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/clock/start"))
+        res = await client.post("/clock/start")
         expect = {
             "is_real": False,
             "is_running": True,
@@ -73,11 +67,6 @@ def test_app(app_process_factory):
         assert res.status_code == 200
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/clock/stop"))
-        expect = {"detail": "Missing monitors configuration"}
+        res = await client.post("/clock/stop")
         assert res.status_code == 200
         assert not res.json()["is_running"]
-
-    finally:
-        proc.terminate()
-        proc.wait()

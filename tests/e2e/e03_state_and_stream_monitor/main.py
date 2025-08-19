@@ -2,6 +2,8 @@ import asyncio
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 
+from prometheus_client import CollectorRegistry
+
 from strats import Data, State, Strats
 from strats.model import (
     PricesData,
@@ -10,11 +12,13 @@ from strats.model import (
 )
 from strats.monitor import StreamClient, StreamMonitor
 
+REGISTRY = CollectorRegistry()
+
 
 class SampleState(State):
     prices = Data(
         data=PricesData(),
-        metrics=PricesMetrics(),
+        metrics=PricesMetrics(registry=REGISTRY),
         data_to_metrics=prices_data_to_prices_metrics,
     )
 
@@ -29,8 +33,8 @@ class SampleStreamClient(StreamClient):
             await asyncio.sleep(10)
 
 
-def main():
-    Strats(
+def create_app():
+    return Strats(
         state=SampleState(),
         monitors=[
             StreamMonitor(
@@ -38,8 +42,5 @@ def main():
                 client=SampleStreamClient(),
             )
         ],
-    ).serve()
-
-
-if __name__ == "__main__":
-    main()
+        registry=REGISTRY,
+    ).create_app()
