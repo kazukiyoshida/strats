@@ -19,6 +19,16 @@ def healthz():
     return "ok"
 
 
+@router.get("/livez")
+def livez():
+    return "ok"
+
+
+@router.get("/readyz")
+def readyz():
+    return "ok"
+
+
 @router.get("/metrics")
 def metrics():
     data = generate_latest()
