@@ -87,7 +87,6 @@ envlist = lint, mypy, py39, py310, py311, py312
 deps =
     pytest
     pytest-asyncio
-    requests
 commands =
     pytest tests -svv
 
@@ -101,7 +100,6 @@ commands =
 deps =
     mypy
     types-waitress
-    types-requests
     types-croniter
 commands = mypy src tests --ignore-missing-imports
 """
