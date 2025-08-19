@@ -1,10 +1,22 @@
 # Changelog
 
+## 0.1.10
+
+Released 2025-08-19
+
+- Features
+  - Add /livez, /readyz endpoint
+  - Return ASGI app, not serve the app
+  - Add runserver command in CLI
+  - Update logging system
+- Fix
+  - Fix Metrics implementation, now user can handle registry
+
 ## 0.1.9
 
 Released 2025-08-04
 
-- Feat
+- Features
   - Make dedup-check configurable
   - add `started_at` and `details` for Strategy and Monitor
 - Refactoring
