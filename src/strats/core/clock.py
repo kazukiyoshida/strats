@@ -5,8 +5,6 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
