@@ -1,97 +1,86 @@
 import asyncio
 import re
-from urllib.parse import urljoin
 
 import pytest
-import requests
+from httpx import ASGITransport, AsyncClient
 
-BASE_URL = "http://localhost:8000"
-APPLICATION_FILEPATH = "tests/e2e/e03_state_and_stream_monitor/app.py"
+from .main import create_app
 
 
 @pytest.mark.asyncio
-async def test_app(app_process_factory):
-    proc = app_process_factory(APPLICATION_FILEPATH)
-
-    try:
+async def test_03_state_and_stream_monitor():
+    app = create_app()
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # >> healthz, metrics
-
-        res = requests.get(urljoin(BASE_URL, "/healthz"))
+        res = await client.get("/healthz")
         assert res.status_code == 200
         assert res.json() == "ok"
 
-        res = requests.get(urljoin(BASE_URL, "/metrics"))
+        res = await client.get("/metrics")
         assert res.status_code == 200
 
         # >> strategy
-
-        res = requests.get(urljoin(BASE_URL, "/strategy"))
+        res = await client.get("/strategy")
         expect = {"is_configured": False, "is_running": False}
         assert res.status_code == 200
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/strategy/start"))
+        res = await client.post("/strategy/start")
         expect = {"detail": "Missing strategy configuration"}
         assert res.status_code == 400
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/strategy/stop"))
+        res = await client.post("/strategy/stop")
         expect = {"detail": "Missing strategy configuration"}
         assert res.status_code == 400
         assert res.json() == expect
 
         # >> monitors
-
-        res = requests.get(urljoin(BASE_URL, "/monitors"))
+        res = await client.get("/monitors")
         expect = {
             "is_configured": True,
             "monitors": {
-                "StreamMonitor_1": {
-                    "is_running": False,
-                },
+                "StreamMonitor_1": {"is_running": False},
             },
         }
         assert res.status_code == 200
         assert res.json() == expect
 
-        res = requests.post(urljoin(BASE_URL, "/monitors/start"))
+        res = await client.post("/monitors/start")
         expect = {
             "is_configured": True,
             "monitors": {
-                "StreamMonitor_1": {
-                    "is_running": True,
-                },
+                "StreamMonitor_1": {"is_running": True},
             },
         }
         assert res.status_code == 200
         resjson = res.json()
-        del resjson["monitors"]["StreamMonitor_1"]["started_at"]  # remove time
+        # 可変な started_at は比較から除外
+        resjson["monitors"]["StreamMonitor_1"].pop("started_at", None)
         assert resjson == expect
 
+        # 監視が一度 tick するのを待つ
         await asyncio.sleep(0.5)
 
-        res = requests.get(urljoin(BASE_URL, "/metrics"))
+        # >> metrics 検証
+        res = await client.get("/metrics")
         assert res.status_code == 200
-        assert extract_unlabeled_metric_value(res.text, "prices_bid") == 100.0
-        assert extract_unlabeled_metric_value(res.text, "prices_ask") == 101.0
-        assert extract_unlabeled_metric_value(res.text, "prices_spread") == 1.0
-        assert extract_unlabeled_metric_value(res.text, "prices_update_count_total") == 1.0
+        body = res.text
+        assert extract_unlabeled_metric_value(body, "prices_bid") == 100.0
+        assert extract_unlabeled_metric_value(body, "prices_ask") == 101.0
+        assert extract_unlabeled_metric_value(body, "prices_spread") == 1.0
+        assert extract_unlabeled_metric_value(body, "prices_update_count_total") == 1.0
 
-        res = requests.post(urljoin(BASE_URL, "/monitors/stop"))
+        # >> stop
+        res = await client.post("/monitors/stop")
         expect = {
             "is_configured": True,
             "monitors": {
-                "StreamMonitor_1": {
-                    "is_running": False,
-                },
+                "StreamMonitor_1": {"is_running": False},
             },
         }
         assert res.status_code == 200
         assert res.json() == expect
-
-    finally:
-        proc.terminate()
-        proc.wait()
 
 
 def extract_unlabeled_metric_value(body: str, metric_name: str) -> float:

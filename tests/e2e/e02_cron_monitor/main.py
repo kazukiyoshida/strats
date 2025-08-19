@@ -8,8 +8,8 @@ async def cron_job(clock, state):
     print("job: ", clock.datetime)
 
 
-def main():
-    Strats(
+def create_app():
+    return Strats(
         clock=Clock(
             start_at="2025-01-01 12:04:50",
             tz=ZoneInfo("Asia/Tokyo"),
@@ -20,8 +20,4 @@ def main():
                 cron_schedule="* * * * *",  # every minutes
             )
         ],
-    ).serve()
-
-
-if __name__ == "__main__":
-    main()
+    ).create_app()
