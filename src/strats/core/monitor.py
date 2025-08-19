@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import weakref
 from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
@@ -13,6 +14,18 @@ class Monitor(ABC):
     """Base class for monitoring functionality"""
 
     _counter = 0
+    _subclasses: weakref.WeakSet = weakref.WeakSet()
+
+    def __init_subclass__(cls, **kw):
+        super().__init_subclass__(**kw)
+        cls._counter = 0  # each subclass starts from 0
+        Monitor._subclasses.add(cls)
+
+    @classmethod
+    def reset_counters(cls):
+        cls._counter = 0
+        for sub in list(cls._subclasses):
+            sub._counter = 0
 
     def __init__(
         self,
