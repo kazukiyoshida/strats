@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import threading
+from dataclasses import dataclass, field
 from typing import Optional
 
 from prometheus_client import REGISTRY, CollectorRegistry
@@ -13,16 +14,24 @@ from .strategy import Strategy
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class StratsConfig:
+    install_access_log: bool = False
+    drop_access_log_paths: tuple[str, ...] = field(default_factory=tuple)
+
+
 class Kernel:
     def __init__(
         self,
         *,
+        config: Optional[StratsConfig] = None,
         state: Optional[State] = None,
         strategy: Optional[Strategy] = None,
         monitors: Optional[list[Monitor]] = None,
         clock: Clock = Clock(),
         registry: Optional[CollectorRegistry] = None,
     ):
+        self.config = config or StratsConfig()
         self.state = state
         self.state_stop_event = None
 

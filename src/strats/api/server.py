@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import FastAPI
 
 from strats.core.kernel import Kernel
@@ -21,15 +19,8 @@ def kernel_getter_factory(kernel):
     return kernel_getter
 
 
-class StratsConfig:
-    install_access_log: bool = False
-    drop_access_log_paths: tuple[str, ...] = ()
-
-
 class Strats(Kernel):
-    def create_app(self, config: Optional[StratsConfig] = None) -> FastAPI:
-        self.config = config or StratsConfig()
-
+    def create_app(self) -> FastAPI:
         app = FastAPI()
         app.include_router(router)
         app.dependency_overrides[get_kernel] = kernel_getter_factory(self)
