@@ -30,8 +30,8 @@ def readyz():
 
 
 @router.get("/metrics")
-def metrics():
-    data = generate_latest()
+def metrics(kernel: Kernel = Depends(get_kernel)):
+    data = generate_latest(kernel.registry)
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 

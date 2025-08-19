@@ -3,6 +3,8 @@ import logging
 import threading
 from typing import Optional
 
+from prometheus_client import REGISTRY, CollectorRegistry
+
 from .clock import Clock
 from .monitor import Monitor
 from .state import State
@@ -19,6 +21,7 @@ class Kernel:
         strategy: Optional[Strategy] = None,
         monitors: Optional[list[Monitor]] = None,
         clock: Clock = Clock(),
+        registry: Optional[CollectorRegistry] = None,
     ):
         self.state = state
         self.state_stop_event = None
@@ -34,6 +37,8 @@ class Kernel:
 
         self.clock = clock
         self.clock_task = None
+
+        self.registry = registry or REGISTRY
 
     async def start_strategy(self):
         if self.strategy is None:
