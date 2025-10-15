@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.11
+
+Released 2025-10-15
+
+- Features
+  - Add StaticMonitor
+- Fix
+  - Remove logging.basicConfig
+
 ## 0.1.10
 
 Released 2025-08-19
