@@ -30,15 +30,15 @@ class StreamMonitor(Monitor):
         self.set_descriptor(state)
         logger.info(f"{self.name} start")
 
-        success = self.exec_on_init()
+        success = await self.exec_on_init(clock, state)
         if not success:
             return
 
         try:
             async for source in self.client.stream():
-                self.exec_on_pre_event(source)
+                await self.exec_on_pre_event(source)
                 self.update_data_descriptor(state, source)
-                self.exec_on_post_event(source)
+                await self.exec_on_post_event(source)
 
         except asyncio.CancelledError:
             # To avoid "ERROR:asyncio:Task exception was never retrieved",
@@ -51,5 +51,5 @@ class StreamMonitor(Monitor):
                 f" in {self.client_name}: {e}"
             )
         finally:
-            self.exec_on_delete()
+            await self.exec_on_delete(clock, state)
             logger.info(f"{self.name} stopped")

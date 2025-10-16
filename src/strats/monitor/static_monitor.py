@@ -22,7 +22,7 @@ class StaticMonitor(Monitor):
         self.set_descriptor(state)
         logger.info(f"{self.name} start")
 
-        success = self.exec_on_init()
+        success = await self.exec_on_init(clock, state)
         if not success:
             return
 
@@ -37,5 +37,5 @@ class StaticMonitor(Monitor):
             # Unexpected error
             logger.error(f"Error in {self.name}: {e}")
         finally:
-            self.exec_on_delete()
+            await self.exec_on_delete(clock, state)
             logger.info(f"{self.name} stopped")
