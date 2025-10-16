@@ -68,27 +68,27 @@ class Monitor(ABC):
             else:
                 raise ValueError(f"data_name: `{self.data_name}` is not found in State")
 
-    def exec_hook(self, f: Optional[Callable], f_name: str, *args) -> bool:
+    async def exec_hook(self, f: Optional[Callable], f_name: str, *args) -> bool:
         if f is None:
             return True
         try:
-            f(*args)
+            await f(*args)
             return True
         except Exception as e:
             logger.error(f"lifecycle `{f_name}` error in {self.name}: {e}")
             return False
 
-    def exec_on_init(self) -> bool:
-        return self.exec_hook(self.on_init, "on_init")
+    async def exec_on_init(self, clock: Clock, state: Optional[State]) -> bool:
+        return await self.exec_hook(self.on_init, "on_init", clock, state)
 
-    def exec_on_delete(self) -> bool:
-        return self.exec_hook(self.on_delete, "on_delete")
+    async def exec_on_delete(self, clock: Clock, state: Optional[State]) -> bool:
+        return await self.exec_hook(self.on_delete, "on_delete", clock, state)
 
-    def exec_on_pre_event(self, source) -> bool:
-        return self.exec_hook(self.on_pre_event, "on_pre_event", source)
+    async def exec_on_pre_event(self, source) -> bool:
+        return await self.exec_hook(self.on_pre_event, "on_pre_event", source)
 
-    def exec_on_post_event(self, source) -> bool:
-        return self.exec_hook(self.on_post_event, "on_post_event", source)
+    async def exec_on_post_event(self, source) -> bool:
+        return await self.exec_hook(self.on_post_event, "on_post_event", source)
 
     def update_data_descriptor(self, state, source):
         if self.data_descriptor is None:

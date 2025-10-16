@@ -29,7 +29,7 @@ class CronMonitor(Monitor):
         self.set_descriptor(state)
         logger.info(f"{self.name} start")
 
-        success = self.exec_on_init()
+        success = await self.exec_on_init(clock, state)
         if not success:
             return
 
@@ -42,9 +42,9 @@ class CronMonitor(Monitor):
                     source = await self.cron_job(clock, state)
 
                     # Update state and lifecycle hooks
-                    self.exec_on_pre_event(source)
+                    await self.exec_on_pre_event(source)
                     self.update_data_descriptor(state, source)
-                    self.exec_on_post_event(source)
+                    await self.exec_on_post_event(source)
 
                     # prepare next schedule
                     next_time = schedule.get_next(datetime)
@@ -58,5 +58,5 @@ class CronMonitor(Monitor):
             # Unexpected error
             logger.error(f"Error in {self.name}, but maybe in the `cron_job` function: {e}")
         finally:
-            self.exec_on_delete()
+            await self.exec_on_delete(clock, state)
             logger.info(f"{self.name} stopped")
