@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.13
+
+Released 2025-10-20
+
+- Features
+  - Support lifecycle hooks
+
 ## 0.1.12
 
 Released 2025-10-16
