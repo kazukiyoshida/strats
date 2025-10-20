@@ -10,3 +10,4 @@ from .core import QueueMsg as QueueMsg
 from .core import State as State
 from .core import Strategy as Strategy
 from .core import StratsConfig as StratsConfig
+from .core import on_event as on_event
