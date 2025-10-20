@@ -1,6 +1,9 @@
+import functools
+
 from fastapi import FastAPI
 
 from strats.core.kernel import Kernel
+from strats.core.lifecycle import get_lifecycle_handlers
 
 from .middleware import AccessLogMiddleware
 from .router import get_kernel, router
@@ -30,4 +33,15 @@ class Strats(Kernel):
                 AccessLogMiddleware,
                 drop_paths=self.config.drop_access_log_paths,
             )
+
+        # Register all globally collected lifecycle hooks
+        for fn in get_lifecycle_handlers("startup"):
+            # Pass kernel iteself to the lifecycle function
+            fn_ = functools.partial(fn, self)
+            app.add_event_handler("startup", fn_)
+        for fn in get_lifecycle_handlers("shutdown"):
+            # Pass kernel iteself to the lifecycle function
+            fn_ = functools.partial(fn, self)
+            app.add_event_handler("shutdown", fn_)
+
         return app
